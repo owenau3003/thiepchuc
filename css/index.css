@@ -1,0 +1,3596 @@
+*,
+  *::after,
+  *::before {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+  }
+
+  /* Chiều cao THẬT của vùng nhìn thấy (JS ghi đè bằng window.innerHeight).
+     100vh trên iOS/in-app browser cao hơn vùng nhìn thấy → mọi thứ neo đáy bị tụt xuống */
+  :root {
+    --app-h: 100vh;
+    --app-h: 100dvh;
+  }
+  @supports (height: 100dvh) {
+    :root { --app-h: 100dvh; }
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Đóng băng toàn bộ animation cho đến khi user bấm "Đã hiểu" */
+  #contenido-principal {
+    transition: opacity 1.35s ease;
+    perspective: 1000px;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  body.not-loaded #contenido-principal .intro,
+  body.not-loaded #contenido-principal .flowers,
+  body.not-loaded #contenido-principal .shooting-stars,
+  body.not-loaded #contenido-principal .particles {
+    opacity: 0 !important;
+  }
+  body.not-loaded #contenido-principal * {
+    animation-play-state: paused !important;
+  }
+
+  /* Pause riêng hoa thêm 0.5s sau khi experience bắt đầu */
+  .flowers--paused,
+  .flowers--paused * {
+    animation-play-state: paused !important;
+  }
+
+  /* Chế độ chụp demo: bung nở toàn bộ hoa ngay lập tức */
+  body.demo-instant #orientationOverlay,
+  body.demo-instant #intro,
+  body.demo-instant .flower__light { display: none !important; }
+  body.demo-instant .flowers { opacity: 1 !important; }
+  body.demo-instant .flower,
+  body.demo-instant .flower__line,
+  body.demo-instant .flower__leaf,
+  body.demo-instant .flower__leafs,
+  body.demo-instant .flower__line__leaf,
+  body.demo-instant .flower__center {
+    animation: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  body.demo-instant .ramo,
+  body.demo-instant .flower-bow,
+  body.demo-instant .rabbit,
+  body.demo-instant .letter {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transition: none !important;
+  }
+
+  :root {
+    --dark-color: #000;
+    --fl-speed: 1.4s;
+    --speed-leaf: 2s;
+
+    /* Theme hoa mặc định: Hoa Dã Quỳ Vàng (Wild Sunflower - Rực rỡ, ấm áp, kiêu sa) */
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #fffbeb 0%, #fef08a 22%, #facc15 50%, #f59e0b 75%, #d97706 90%, #b45309 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #fffdf0 0%, #fef9c3 25%, #fde047 55%, #f59e0b 80%, #d97706 95%, #92400e 100%);
+    --fl-leaf-border: #d97706;
+    --fl-leaf-shadow: 0 0 1.2vmin rgba(250, 204, 21, 0.75);
+    --fl-leaf-inner-shadow: 0 0 0.8vmin rgba(245, 158, 11, 0.65);
+    --fl-center-bg: radial-gradient(circle at 35% 35%, #fef08a 0%, #f59e0b 25%, #b45309 60%, #78350f 85%, #451a03 100%);
+    --fl-center-border: #b45309;
+    --fl-center-shadow: 0 0 1vmin rgba(245, 158, 11, 0.75);
+    --fl-glow: rgba(250, 204, 21, 0.75);
+    --fl-mini-petal-bg: radial-gradient(circle at 50% 20%, #fffbeb 0%, #fef08a 25%, #facc15 55%, #f59e0b 80%, #d97706 100%);
+    --fl-mini-petal-border: #d97706;
+    --fl-mini-glow: rgba(250, 204, 21, 0.85);
+
+    /* Tông màu phong bì và modal thư mặc định (Tông vàng hoàng kim sang trọng) */
+    --letter-border-color: #f59e0b;
+    --letter-border-glow: rgba(245, 158, 11, 0.55);
+    --letter-seal-bg1: #fde047;
+    --letter-seal-bg2: #d97706;
+    --letter-seal-glow: rgba(245, 158, 11, 0.85);
+    --letter-modal-accent: #d97706;
+    --letter-modal-btn-gradient: linear-gradient(135deg, #fbbf24 0%, #f59e0b 45%, #d97706 100%);
+    --letter-modal-btn-shadow: 0 6px 20px rgba(217, 119, 6, 0.45);
+    --letter-modal-btn-shadow-hover: 0 8px 24px rgba(217, 119, 6, 0.65);
+    --letter-modal-title: #b45309;
+    --letter-modal-text: #78350f;
+    --letter-modal-signature: #b45309;
+    --letter-envelope-bg: linear-gradient(135deg, #fffdf5 0%, #fef3c7 50%, #fde68a 100%);
+    --letter-modal-bg: linear-gradient(135deg, #fffdf5 0%, #fef9e7 50%, #fef0c7 100%);
+    --fp-progress-stroke: #f59e0b;
+  }
+
+  /* 🌻 Theme 0: Hoa Dã Quỳ Vàng (Wild Sunflower / Dã Quỳ - Mặc định) */
+  body[data-flower-color="da_quy"],
+  .flowers[data-flower-color="da_quy"],
+  body[data-flower-color="yellow"],
+  .flowers[data-flower-color="yellow"],
+  body[data-flower-color="wild_sunflower"],
+  .flowers[data-flower-color="wild_sunflower"] {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #fffbeb 0%, #fef08a 22%, #facc15 50%, #f59e0b 75%, #d97706 90%, #b45309 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #fffdf0 0%, #fef9c3 25%, #fde047 55%, #f59e0b 80%, #d97706 95%, #92400e 100%);
+    --fl-leaf-border: #d97706;
+    --fl-leaf-shadow: 0 0 1.2vmin rgba(250, 204, 21, 0.75);
+    --fl-leaf-inner-shadow: 0 0 0.8vmin rgba(245, 158, 11, 0.65);
+    --fl-center-bg: radial-gradient(circle at 35% 35%, #fef08a 0%, #f59e0b 25%, #b45309 60%, #78350f 85%, #451a03 100%);
+    --fl-center-border: #b45309;
+    --fl-center-shadow: 0 0 1vmin rgba(245, 158, 11, 0.75);
+    --fl-glow: rgba(250, 204, 21, 0.75);
+    --fl-mini-petal-bg: radial-gradient(circle at 50% 20%, #fffbeb 0%, #fef08a 25%, #facc15 55%, #f59e0b 80%, #d97706 100%);
+    --fl-mini-petal-border: #d97706;
+    --fl-mini-glow: rgba(250, 204, 21, 0.85);
+
+    --letter-border-color: #f59e0b;
+    --letter-border-glow: rgba(245, 158, 11, 0.55);
+    --letter-seal-bg1: #fde047;
+    --letter-seal-bg2: #d97706;
+    --letter-seal-glow: rgba(245, 158, 11, 0.85);
+    --letter-modal-accent: #d97706;
+    --letter-modal-btn-gradient: linear-gradient(135deg, #fbbf24 0%, #f59e0b 45%, #d97706 100%);
+    --letter-modal-btn-shadow: 0 6px 20px rgba(217, 119, 6, 0.45);
+    --letter-modal-btn-shadow-hover: 0 8px 24px rgba(217, 119, 6, 0.65);
+    --letter-modal-title: #b45309;
+    --letter-modal-text: #78350f;
+    --letter-modal-signature: #b45309;
+    --letter-envelope-bg: linear-gradient(135deg, #fffdf5 0%, #fef3c7 50%, #fde68a 100%);
+    --letter-modal-bg: linear-gradient(135deg, #fffdf5 0%, #fef9e7 50%, #fef0c7 100%);
+    --fp-progress-stroke: #f59e0b;
+  }
+
+  /* 🌸 Theme 1: Hồng Tulip Cổ Điển (Classic Rose Pink) */
+  body[data-flower-color="classic"],
+  .flowers[data-flower-color="classic"] {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #ffe0f0 0%, #ff8fcf 30%, #e75480 60%, #c2185b 80%, #880e4f 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #fff0fa 0%, #ffb3de 30%, #ff8fcf 55%, #e75480 80%, #c2185b 100%);
+    --fl-leaf-border: #c2185b;
+    --fl-leaf-shadow: 0 0 1vmin rgba(255, 179, 222, 0.6);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(255, 179, 222, 0.5);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #e0b3ff 0%, #a259e6 80%, #4b0066 100%);
+    --fl-center-border: #a259e6;
+    --fl-center-shadow: 0 0 0.8vmin rgba(224, 179, 255, 0.6);
+    --fl-glow: rgba(255, 179, 222, 0.6);
+    --fl-mini-petal-bg: radial-gradient(circle at 50% 20%, #ffe0f0 0%, #ff8fcf 30%, #e75480 60%, #c2185b 80%, #880e4f 100%);
+    --fl-mini-petal-border: #c2185b;
+    --fl-mini-glow: rgba(255, 179, 222, 0.75);
+
+    --letter-border-color: #f472b6;
+    --letter-border-glow: rgba(255, 107, 157, 0.5);
+    --letter-seal-bg1: #ff6b9d;
+    --letter-seal-bg2: #c2185b;
+    --letter-seal-glow: rgba(255, 107, 157, 0.85);
+    --letter-modal-accent: #c2185b;
+    --letter-modal-btn-gradient: linear-gradient(135deg, #c2185b 0%, #e91e63 100%);
+    --letter-modal-title: #be185d;
+    --letter-modal-text: #831843;
+    --letter-modal-signature: #be185d;
+    --letter-envelope-bg: linear-gradient(135deg, #fff9e6 0%, #ffe6cc 50%, #ffd9b3 100%);
+    --letter-modal-bg: linear-gradient(135deg, #fff9e6 0%, #ffe6cc 100%);
+    --letter-modal-btn-shadow: 0 6px 20px rgba(219, 39, 119, 0.45);
+    --letter-modal-btn-shadow-hover: 0 8px 24px rgba(219, 39, 119, 0.6);
+  }
+
+  /* 🌸 Theme 2: Hồng Phấn (Pastel / Baby Pink - Nhạt, ngọt ngào, thơ mộng) */
+  body[data-flower-color="pastel"],
+  .flowers[data-flower-color="pastel"] {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #ffe4ee 25%, #f9a8d4 55%, #ec4899 82%, #be185d 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #fff0f6 30%, #fbcfe8 55%, #f472b6 80%, #db2777 100%);
+    --fl-leaf-border: #db2777;
+    --fl-leaf-shadow: 0 0 1vmin rgba(249, 168, 212, 0.7);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(249, 168, 212, 0.6);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #ffe4ee 0%, #f472b6 75%, #9d174d 100%);
+    --fl-center-border: #f472b6;
+    --fl-center-shadow: 0 0 0.8vmin rgba(244, 114, 182, 0.6);
+    --fl-glow: rgba(249, 168, 212, 0.7);
+    --fl-mini-petal-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #ffe4ee 25%, #f9a8d4 55%, #ec4899 82%, #be185d 100%);
+    --fl-mini-petal-border: #db2777;
+    --fl-mini-glow: rgba(249, 168, 212, 0.8);
+
+    --letter-border-color: #f472b6;
+    --letter-border-glow: rgba(244, 114, 182, 0.5);
+    --letter-seal-bg1: #f9a8d4;
+    --letter-seal-bg2: #db2777;
+    --letter-seal-glow: rgba(244, 114, 182, 0.85);
+    --letter-modal-accent: #db2777;
+    --letter-modal-btn-gradient: linear-gradient(135deg, #db2777 0%, #f472b6 100%);
+  }
+
+  /* 🍑 Theme 3: Hồng Đào (Peach Pink - Ánh cam đào tươi tắn, trẻ trung) */
+  body[data-flower-color="peach"],
+  .flowers[data-flower-color="peach"] {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #fff7ed 0%, #fed7aa 25%, #fb7185 58%, #e11d48 80%, #9f1239 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #fffaf5 0%, #ffedd5 30%, #fda4af 55%, #f43f5e 80%, #be123c 100%);
+    --fl-leaf-border: #e11d48;
+    --fl-leaf-shadow: 0 0 1vmin rgba(251, 113, 133, 0.7);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(251, 113, 133, 0.6);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #fed7aa 0%, #fb7185 75%, #881337 100%);
+    --fl-center-border: #fb7185;
+    --fl-center-shadow: 0 0 0.8vmin rgba(251, 113, 133, 0.6);
+    --fl-glow: rgba(251, 113, 133, 0.7);
+    --fl-mini-petal-bg: radial-gradient(circle at 50% 20%, #fff7ed 0%, #fed7aa 25%, #fb7185 58%, #e11d48 80%, #9f1239 100%);
+    --fl-mini-petal-border: #e11d48;
+    --fl-mini-glow: rgba(251, 113, 133, 0.8);
+
+    --letter-border-color: #fb7185;
+    --letter-border-glow: rgba(251, 113, 133, 0.5);
+    --letter-seal-bg1: #fda4af;
+    --letter-seal-bg2: #e11d48;
+    --letter-seal-glow: rgba(251, 113, 133, 0.85);
+    --letter-modal-accent: #e11d48;
+    --letter-modal-btn-gradient: linear-gradient(135deg, #e11d48 0%, #fb7185 100%);
+  }
+
+  /* 🌺 Theme 4: Hồng Sen Đậm (Magenta Fuchsia - Đậm đà, rực rỡ, kiêu sa) */
+  body[data-flower-color="magenta"],
+  .flowers[data-flower-color="magenta"] {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #fdf2f8 0%, #f472b6 28%, #d946ef 58%, #a21caf 82%, #701a75 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #fdf4ff 0%, #f0abfc 30%, #e879f9 55%, #c026d3 80%, #86198f 100%);
+    --fl-leaf-border: #a21caf;
+    --fl-leaf-shadow: 0 0 1vmin rgba(232, 121, 249, 0.7);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(232, 121, 249, 0.6);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #f5d0fe 0%, #c026d3 75%, #581c87 100%);
+    --fl-center-border: #c026d3;
+    --fl-center-shadow: 0 0 0.8vmin rgba(232, 121, 249, 0.6);
+    --fl-glow: rgba(232, 121, 249, 0.7);
+    --fl-mini-petal-bg: radial-gradient(circle at 50% 20%, #fdf2f8 0%, #f472b6 28%, #d946ef 58%, #a21caf 82%, #701a75 100%);
+    --fl-mini-petal-border: #a21caf;
+    --fl-mini-glow: rgba(232, 121, 249, 0.8);
+
+    --letter-border-color: #d946ef;
+    --letter-border-glow: rgba(217, 70, 239, 0.5);
+    --letter-seal-bg1: #e879f9;
+    --letter-seal-bg2: #a21caf;
+    --letter-seal-glow: rgba(217, 70, 239, 0.85);
+    --letter-modal-accent: #a21caf;
+    --letter-modal-btn-gradient: linear-gradient(135deg, #a21caf 0%, #d946ef 100%);
+  }
+
+  /* 🌹 Theme 5: Đỏ Hồng Nhung (Vintage Ruby Rose - Đậm ấm nồng nàn, quý phái) */
+  body[data-flower-color="vintage"],
+  .flowers[data-flower-color="vintage"] {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #ffe4e6 0%, #fb7185 28%, #e11d48 58%, #9f1239 82%, #4c0519 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #fff1f2 0%, #fda4af 30%, #f43f5e 55%, #be123c 80%, #881337 100%);
+    --fl-leaf-border: #9f1239;
+    --fl-leaf-shadow: 0 0 1vmin rgba(251, 113, 133, 0.65);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(251, 113, 133, 0.55);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #fecdd3 0%, #be123c 75%, #4c0519 100%);
+    --fl-center-border: #e11d48;
+    --fl-center-shadow: 0 0 0.8vmin rgba(251, 113, 133, 0.6);
+    --fl-glow: rgba(251, 113, 133, 0.65);
+    --fl-mini-petal-bg: radial-gradient(circle at 50% 20%, #ffe4e6 0%, #fb7185 28%, #e11d48 58%, #9f1239 82%, #4c0519 100%);
+    --fl-mini-petal-border: #9f1239;
+    --fl-mini-glow: rgba(251, 113, 133, 0.75);
+
+    --letter-border-color: #e11d48;
+    --letter-border-glow: rgba(225, 29, 72, 0.5);
+    --letter-seal-bg1: #f43f5e;
+    --letter-seal-bg2: #9f1239;
+    --letter-seal-glow: rgba(225, 29, 72, 0.85);
+    --letter-modal-accent: #9f1239;
+    --letter-modal-btn-gradient: linear-gradient(135deg, #9f1239 0%, #e11d48 100%);
+  }
+
+  /* 🍭 Theme 6: Phối Màu Candy (Candy Pastel Mix - Ngọt ngào như ảnh hoa tiệm Candy Bông) */
+  body[data-flower-color="mix"],
+  .flowers[data-flower-color="mix"] {
+    --fl-glow: rgba(244, 114, 182, 0.75);
+    --fl-mini-petal-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #fbcfe8 40%, #f472b6 80%, #db2777 100%);
+    --fl-mini-petal-border: #db2777;
+    --fl-mini-glow: rgba(244, 114, 182, 0.8);
+
+    --letter-border-color: #f472b6;
+    --letter-border-glow: rgba(244, 114, 182, 0.5);
+    --letter-seal-bg1: #f472b6;
+    --letter-seal-bg2: #c2185b;
+    --letter-seal-glow: rgba(244, 114, 182, 0.85);
+    --letter-modal-accent: #c2185b;
+    --letter-modal-btn-gradient: linear-gradient(135deg, #c2185b 0%, #e91e63 100%);
+  }
+  /* Phối từng bông hoa cho theme mix */
+  /* Bông hồng phấn (1, 6) */
+  body[data-flower-color="mix"] .flower--1,
+  body[data-flower-color="mix"] .flower--6 {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #ffe4ee 25%, #f9a8d4 55%, #ec4899 82%, #be185d 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #fff0f6 30%, #fbcfe8 55%, #f472b6 80%, #db2777 100%);
+    --fl-leaf-border: #db2777;
+    --fl-leaf-shadow: 0 0 1vmin rgba(249, 168, 212, 0.7);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(249, 168, 212, 0.6);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #ffe4ee 0%, #f472b6 75%, #9d174d 100%);
+    --fl-center-border: #f472b6;
+    --fl-center-shadow: 0 0 0.8vmin rgba(244, 114, 182, 0.6);
+  }
+  /* Bông trắng kem ánh ngọc (2, 7) */
+  body[data-flower-color="mix"] .flower--2,
+  body[data-flower-color="mix"] .flower--7 {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #fffbeb 30%, #fef3c7 60%, #cbd5e1 88%, #94a3b8 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #fffdf5 30%, #fef9c3 55%, #e2e8f0 80%, #cbd5e1 100%);
+    --fl-leaf-border: #94a3b8;
+    --fl-leaf-shadow: 0 0 1vmin rgba(254, 240, 138, 0.65);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(254, 240, 138, 0.5);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #fef08a 0%, #facc15 75%, #ca8a04 100%);
+    --fl-center-border: #eab308;
+    --fl-center-shadow: 0 0 0.8vmin rgba(250, 204, 21, 0.6);
+  }
+  /* Bông xanh baby pastel (3, 8) */
+  body[data-flower-color="mix"] .flower--3,
+  body[data-flower-color="mix"] .flower--8 {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #f0f9ff 0%, #bae6fd 30%, #38bdf8 60%, #0284c7 82%, #0369a1 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #f8fafc 0%, #e0f2fe 30%, #7dd3fc 55%, #0ea5e9 80%, #0284c7 100%);
+    --fl-leaf-border: #0284c7;
+    --fl-leaf-shadow: 0 0 1vmin rgba(56, 189, 248, 0.7);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(56, 189, 248, 0.6);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #e0f2fe 0%, #38bdf8 75%, #0369a1 100%);
+    --fl-center-border: #38bdf8;
+    --fl-center-shadow: 0 0 0.8vmin rgba(56, 189, 248, 0.6);
+  }
+  /* Bông cam đào tươi tắn (4, 9) */
+  body[data-flower-color="mix"] .flower--4,
+  body[data-flower-color="mix"] .flower--9 {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #fff7ed 0%, #fed7aa 25%, #fb7185 58%, #e11d48 80%, #9f1239 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #fffaf5 0%, #ffedd5 30%, #fda4af 55%, #f43f5e 80%, #be123c 100%);
+    --fl-leaf-border: #e11d48;
+    --fl-leaf-shadow: 0 0 1vmin rgba(251, 113, 133, 0.7);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(251, 113, 133, 0.6);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #fed7aa 0%, #fb7185 75%, #881337 100%);
+    --fl-center-border: #fb7185;
+    --fl-center-shadow: 0 0 0.8vmin rgba(251, 113, 133, 0.6);
+  }
+  /* Bông hồng sen đậm / fuchsia kiêu sa (5, 10, 11) */
+  body[data-flower-color="mix"] .flower--5,
+  body[data-flower-color="mix"] .flower--10,
+  body[data-flower-color="mix"] .flower--11 {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #fdf2f8 0%, #f472b6 28%, #d946ef 58%, #a21caf 82%, #701a75 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #fdf4ff 0%, #f0abfc 30%, #e879f9 55%, #c026d3 80%, #86198f 100%);
+    --fl-leaf-border: #a21caf;
+    --fl-leaf-shadow: 0 0 1vmin rgba(232, 121, 249, 0.7);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(232, 121, 249, 0.6);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #f5d0fe 0%, #c026d3 75%, #581c87 100%);
+    --fl-center-border: #c026d3;
+    --fl-center-shadow: 0 0 0.8vmin rgba(232, 121, 249, 0.6);
+  }
+
+  /* 🌸 Theme 10: Mix Hồng Pastel (Pink Romance Mix - Phối các sắc thái hồng ngọt ngào) */
+  body[data-flower-color="pink_mix"],
+  .flowers[data-flower-color="pink_mix"] {
+    --fl-glow: rgba(255, 179, 222, 0.75);
+    --fl-mini-petal-bg: radial-gradient(circle at 50% 20%, #ffe4ee 0%, #f472b6 60%, #c2185b 100%);
+    --fl-mini-petal-border: #c2185b;
+    --fl-mini-glow: rgba(255, 179, 222, 0.8);
+
+    --letter-border-color: #f472b6;
+    --letter-border-glow: rgba(255, 179, 222, 0.5);
+    --letter-seal-bg1: #f472b6;
+    --letter-seal-bg2: #c2185b;
+    --letter-seal-glow: rgba(255, 179, 222, 0.85);
+    --letter-modal-accent: #c2185b;
+    --letter-modal-btn-gradient: linear-gradient(135deg, #c2185b 0%, #f472b6 100%);
+  }
+  /* Bông hồng phấn dịu ngọt (1, 6) */
+  body[data-flower-color="pink_mix"] .flower--1,
+  body[data-flower-color="pink_mix"] .flower--6 {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #ffe4ee 25%, #f9a8d4 55%, #ec4899 82%, #be185d 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #fff0f6 30%, #fbcfe8 55%, #f472b6 80%, #db2777 100%);
+    --fl-leaf-border: #db2777;
+    --fl-leaf-shadow: 0 0 1vmin rgba(249, 168, 212, 0.7);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(249, 168, 212, 0.6);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #ffe4ee 0%, #f472b6 75%, #9d174d 100%);
+    --fl-center-border: #f472b6;
+    --fl-center-shadow: 0 0 0.8vmin rgba(244, 114, 182, 0.6);
+  }
+  /* Bông trắng phớt hồng ngọc trai (2, 9) */
+  body[data-flower-color="pink_mix"] .flower--2,
+  body[data-flower-color="pink_mix"] .flower--9 {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #fff5f8 28%, #fce7f3 55%, #f472b6 82%, #db2777 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #fff0f5 30%, #fdf2f8 55%, #f9a8d4 80%, #ec4899 100%);
+    --fl-leaf-border: #f472b6;
+    --fl-leaf-shadow: 0 0 1vmin rgba(253, 242, 248, 0.75);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(251, 207, 232, 0.6);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #fff0f5 0%, #f9a8d4 75%, #db2777 100%);
+    --fl-center-border: #f472b6;
+    --fl-center-shadow: 0 0 0.8vmin rgba(249, 168, 212, 0.6);
+  }
+  /* Bông hồng cam đào tươi tắn (3, 7) */
+  body[data-flower-color="pink_mix"] .flower--3,
+  body[data-flower-color="pink_mix"] .flower--7 {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #fff7ed 0%, #fed7aa 25%, #fb7185 58%, #e11d48 80%, #9f1239 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #fffaf5 0%, #ffedd5 30%, #fda4af 55%, #f43f5e 80%, #be123c 100%);
+    --fl-leaf-border: #e11d48;
+    --fl-leaf-shadow: 0 0 1vmin rgba(251, 113, 133, 0.7);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(251, 113, 133, 0.6);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #fed7aa 0%, #fb7185 75%, #881337 100%);
+    --fl-center-border: #fb7185;
+    --fl-center-shadow: 0 0 0.8vmin rgba(251, 113, 133, 0.6);
+  }
+  /* Bông hồng tulip chuẩn cổ điển (4, 8) */
+  body[data-flower-color="pink_mix"] .flower--4,
+  body[data-flower-color="pink_mix"] .flower--8 {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #ffe0f0 0%, #ff8fcf 30%, #e75480 60%, #c2185b 80%, #880e4f 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #fff0fa 0%, #ffb3de 30%, #ff8fcf 55%, #e75480 80%, #c2185b 100%);
+    --fl-leaf-border: #c2185b;
+    --fl-leaf-shadow: 0 0 1vmin rgba(255, 179, 222, 0.6);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(255, 179, 222, 0.5);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #e0b3ff 0%, #a259e6 80%, #4b0066 100%);
+    --fl-center-border: #a259e6;
+    --fl-center-shadow: 0 0 0.8vmin rgba(224, 179, 255, 0.6);
+  }
+  /* Bông hồng sen đậm / fuchsia kiêu sa (5, 10, 11) */
+  body[data-flower-color="pink_mix"] .flower--5,
+  body[data-flower-color="pink_mix"] .flower--10,
+  body[data-flower-color="pink_mix"] .flower--11 {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #fdf2f8 0%, #f472b6 28%, #d946ef 58%, #a21caf 82%, #701a75 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #fdf4ff 0%, #f0abfc 30%, #e879f9 55%, #c026d3 80%, #86198f 100%);
+    --fl-leaf-border: #a21caf;
+    --fl-leaf-shadow: 0 0 1vmin rgba(232, 121, 249, 0.7);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(232, 121, 249, 0.6);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #f5d0fe 0%, #c026d3 75%, #581c87 100%);
+    --fl-center-border: #c026d3;
+    --fl-center-shadow: 0 0 0.8vmin rgba(232, 121, 249, 0.6);
+  }
+
+  /* 🌷 Theme 11: Mix Hồng Tulip (Pure Pink Mix - Tulip chủ đạo, hồng phấn, hồng đỏ, hồng đào - Không hồng sen) */
+  body[data-flower-color="pink_tulip_mix"],
+  .flowers[data-flower-color="pink_tulip_mix"] {
+    --fl-glow: rgba(255, 182, 193, 0.75);
+    --fl-mini-petal-bg: radial-gradient(circle at 50% 20%, #fff1f2 0%, #fb7185 50%, #e11d48 100%);
+    --fl-mini-petal-border: #e11d48;
+    --fl-mini-glow: rgba(255, 182, 193, 0.8);
+
+    --letter-border-color: #fb7185;
+    --letter-border-glow: rgba(251, 113, 133, 0.5);
+    --letter-seal-bg1: #fb7185;
+    --letter-seal-bg2: #be123c;
+    --letter-seal-glow: rgba(244, 63, 94, 0.85);
+    --letter-modal-accent: #be123c;
+    --letter-modal-btn-gradient: linear-gradient(135deg, #be123c 0%, #fb7185 100%);
+  }
+  /* Bông hồng tulip chủ đạo (1, 4, 5, 7) */
+  body[data-flower-color="pink_tulip_mix"] .flower--1,
+  body[data-flower-color="pink_tulip_mix"] .flower--4,
+  body[data-flower-color="pink_tulip_mix"] .flower--5,
+  body[data-flower-color="pink_tulip_mix"] .flower--7 {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #ffe0f0 0%, #ff8fcf 30%, #e75480 60%, #c2185b 80%, #880e4f 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #fff0fa 0%, #ffb3de 30%, #ff8fcf 55%, #e75480 80%, #c2185b 100%);
+    --fl-leaf-border: #c2185b;
+    --fl-leaf-shadow: 0 0 1vmin rgba(255, 179, 222, 0.65);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(255, 179, 222, 0.55);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #ffd6eb 0%, #e75480 75%, #880e4f 100%);
+    --fl-center-border: #e75480;
+    --fl-center-shadow: 0 0 0.8vmin rgba(231, 84, 128, 0.6);
+  }
+  /* Bông hồng phấn dịu ngọt (2, 6) */
+  body[data-flower-color="pink_tulip_mix"] .flower--2,
+  body[data-flower-color="pink_tulip_mix"] .flower--6 {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #ffe4ee 25%, #f9a8d4 55%, #ec4899 82%, #be185d 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #fff0f6 30%, #fbcfe8 55%, #f472b6 80%, #db2777 100%);
+    --fl-leaf-border: #db2777;
+    --fl-leaf-shadow: 0 0 1vmin rgba(249, 168, 212, 0.7);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(249, 168, 212, 0.6);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #ffe4ee 0%, #f472b6 75%, #9d174d 100%);
+    --fl-center-border: #f472b6;
+    --fl-center-shadow: 0 0 0.8vmin rgba(244, 114, 182, 0.6);
+  }
+  /* Bông hồng đào tươi tắn ấm áp (3, 8, 9) */
+  body[data-flower-color="pink_tulip_mix"] .flower--3,
+  body[data-flower-color="pink_tulip_mix"] .flower--8,
+  body[data-flower-color="pink_tulip_mix"] .flower--9 {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #fff7ed 0%, #fed7aa 25%, #fb7185 58%, #e11d48 80%, #9f1239 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #fffaf5 0%, #ffedd5 30%, #fda4af 55%, #f43f5e 80%, #be123c 100%);
+    --fl-leaf-border: #e11d48;
+    --fl-leaf-shadow: 0 0 1vmin rgba(251, 113, 133, 0.7);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(251, 113, 133, 0.6);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #fed7aa 0%, #fb7185 75%, #881337 100%);
+    --fl-center-border: #fb7185;
+    --fl-center-shadow: 0 0 0.8vmin rgba(251, 113, 133, 0.6);
+  }
+  /* Bông hồng đỏ quý phái làm điểm nhấn (10, 11) */
+  body[data-flower-color="pink_tulip_mix"] .flower--10,
+  body[data-flower-color="pink_tulip_mix"] .flower--11 {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #fff1f2 0%, #fecdd3 22%, #fb7185 50%, #e11d48 78%, #9f1239 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #fff5f5 0%, #ffe4e6 25%, #f43f5e 55%, #be123c 82%, #881337 100%);
+    --fl-leaf-border: #be123c;
+    --fl-leaf-shadow: 0 0 1.1vmin rgba(244, 63, 94, 0.75);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(244, 63, 94, 0.6);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #ffe4e6 0%, #e11d48 75%, #4c0519 100%);
+    --fl-center-border: #e11d48;
+    --fl-center-shadow: 0 0 0.9vmin rgba(225, 29, 72, 0.7);
+  }
+
+  /* 🌺 Theme 12: Mẫu 2 — Hồng Mâm Xôi & Hồng Phấn (#D93175 + #F5B7CE) */
+  body[data-flower-color="raspberry_pink"],
+  .flowers[data-flower-color="raspberry_pink"] {
+    --fl-glow: rgba(217, 49, 117, 0.75);
+    --fl-mini-petal-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #f5b7ce 45%, #d93175 100%);
+    --fl-mini-petal-border: #d93175;
+    --fl-mini-glow: rgba(245, 183, 206, 0.85);
+
+    --letter-border-color: #d93175;
+    --letter-border-glow: rgba(217, 49, 117, 0.5);
+    --letter-seal-bg1: #f5b7ce;
+    --letter-seal-bg2: #d93175;
+    --letter-seal-glow: rgba(217, 49, 117, 0.85);
+    --letter-modal-accent: #d93175;
+    --letter-modal-btn-gradient: linear-gradient(135deg, #d93175 0%, #f5b7ce 100%);
+  }
+  /* Nhóm hồng mâm xôi đậm #D93175 (bông 3, 4, 5, 7, 8) */
+  body[data-flower-color="raspberry_pink"] .flower--3,
+  body[data-flower-color="raspberry_pink"] .flower--4,
+  body[data-flower-color="raspberry_pink"] .flower--5,
+  body[data-flower-color="raspberry_pink"] .flower--7,
+  body[data-flower-color="raspberry_pink"] .flower--8 {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #ffe4ee 0%, #f771a3 30%, #d93175 65%, #a81750 88%, #7d0d39 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #fff0f6 0%, #faa2c1 30%, #d93175 65%, #a81750 88%, #7d0d39 100%);
+    --fl-leaf-border: #a81750;
+    --fl-leaf-shadow: 0 0 1vmin rgba(217, 49, 117, 0.7);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(217, 49, 117, 0.6);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #f771a3 0%, #d93175 75%, #7d0d39 100%);
+    --fl-center-border: #d93175;
+    --fl-center-shadow: 0 0 0.8vmin rgba(217, 49, 117, 0.6);
+  }
+  /* Nhóm hồng phấn #F5B7CE (bông 1, 2, 6, 9, 10, 11) */
+  body[data-flower-color="raspberry_pink"] .flower--1,
+  body[data-flower-color="raspberry_pink"] .flower--2,
+  body[data-flower-color="raspberry_pink"] .flower--6,
+  body[data-flower-color="raspberry_pink"] .flower--9,
+  body[data-flower-color="raspberry_pink"] .flower--10,
+  body[data-flower-color="raspberry_pink"] .flower--11 {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #fff5f8 25%, #fce4ec 50%, #f5b7ce 78%, #e892b0 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #fff0f5 30%, #fdf2f7 55%, #f5b7ce 80%, #e892b0 100%);
+    --fl-leaf-border: #e892b0;
+    --fl-leaf-shadow: 0 0 1vmin rgba(245, 183, 206, 0.75);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(245, 183, 206, 0.6);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #fff0f5 0%, #f5b7ce 75%, #d87498 100%);
+    --fl-center-border: #f5b7ce;
+    --fl-center-shadow: 0 0 0.8vmin rgba(245, 183, 206, 0.6);
+  }
+
+  /* 🪸 Theme 13: Mẫu 3 — Hồng San Hô & Kem Champagne (#F16A72 + #FFE4BC) */
+  body[data-flower-color="coral_champagne"],
+  .flowers[data-flower-color="coral_champagne"] {
+    --fl-glow: rgba(241, 106, 114, 0.75);
+    --fl-mini-petal-bg: radial-gradient(circle at 50% 20%, #fff8ed 0%, #ffe4bc 45%, #f16a72 100%);
+    --fl-mini-petal-border: #f16a72;
+    --fl-mini-glow: rgba(255, 228, 188, 0.85);
+
+    --letter-border-color: #f16a72;
+    --letter-border-glow: rgba(241, 106, 114, 0.5);
+    --letter-seal-bg1: #ffe4bc;
+    --letter-seal-bg2: #f16a72;
+    --letter-seal-glow: rgba(241, 106, 114, 0.85);
+    --letter-modal-accent: #f16a72;
+    --letter-modal-btn-gradient: linear-gradient(135deg, #f16a72 0%, #ffe4bc 100%);
+  }
+  /* Nhóm hồng san hô #F16A72 (bông 3, 4, 5, 7, 8) */
+  body[data-flower-color="coral_champagne"] .flower--3,
+  body[data-flower-color="coral_champagne"] .flower--4,
+  body[data-flower-color="coral_champagne"] .flower--5,
+  body[data-flower-color="coral_champagne"] .flower--7,
+  body[data-flower-color="coral_champagne"] .flower--8 {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #fff1f2 0%, #fecdd3 25%, #f16a72 65%, #c93b45 88%, #941e26 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #fff5f5 0%, #ffe4e6 28%, #f16a72 65%, #c93b45 88%, #941e26 100%);
+    --fl-leaf-border: #c93b45;
+    --fl-leaf-shadow: 0 0 1vmin rgba(241, 106, 114, 0.7);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(241, 106, 114, 0.6);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #ffccd0 0%, #f16a72 75%, #941e26 100%);
+    --fl-center-border: #f16a72;
+    --fl-center-shadow: 0 0 0.8vmin rgba(241, 106, 114, 0.6);
+  }
+  /* Nhóm kem champagne #FFE4BC (bông 1, 2, 6, 9, 10, 11) */
+  body[data-flower-color="coral_champagne"] .flower--1,
+  body[data-flower-color="coral_champagne"] .flower--2,
+  body[data-flower-color="coral_champagne"] .flower--6,
+  body[data-flower-color="coral_champagne"] .flower--9,
+  body[data-flower-color="coral_champagne"] .flower--10,
+  body[data-flower-color="coral_champagne"] .flower--11 {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #fffdf8 25%, #fff4e5 50%, #ffe4bc 78%, #eed0a0 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #fffefc 30%, #fff8ed 55%, #ffe4bc 80%, #eed0a0 100%);
+    --fl-leaf-border: #d4ad72;
+    --fl-leaf-shadow: 0 0 1vmin rgba(255, 228, 188, 0.75);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(255, 228, 188, 0.6);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #fffdf8 0%, #ffe4bc 75%, #d4ad72 100%);
+    --fl-center-border: #eed0a0;
+    --fl-center-shadow: 0 0 0.8vmin rgba(238, 208, 160, 0.6);
+  }
+
+  /* 💜 Theme 7: Tím Mộng Mơ (Lavender Dream - Lãng mạn, thủy chung) */
+  body[data-flower-color="purple"],
+  .flowers[data-flower-color="purple"] {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #faf5ff 0%, #e9d5ff 28%, #c084fc 58%, #9333ea 82%, #581c87 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #fdf4ff 0%, #f3e8ff 30%, #d8b4fe 55%, #a855f7 80%, #6b21a8 100%);
+    --fl-leaf-border: #9333ea;
+    --fl-leaf-shadow: 0 0 1vmin rgba(192, 132, 252, 0.7);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(192, 132, 252, 0.6);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #f3e8ff 0%, #a855f7 75%, #4c1d95 100%);
+    --fl-center-border: #a855f7;
+    --fl-center-shadow: 0 0 0.8vmin rgba(192, 132, 252, 0.6);
+    --fl-glow: rgba(192, 132, 252, 0.7);
+    --fl-mini-petal-bg: radial-gradient(circle at 50% 20%, #faf5ff 0%, #e9d5ff 28%, #c084fc 58%, #9333ea 82%, #581c87 100%);
+    --fl-mini-petal-border: #9333ea;
+    --fl-mini-glow: rgba(192, 132, 252, 0.8);
+
+    --letter-border-color: #c084fc;
+    --letter-border-glow: rgba(192, 132, 252, 0.5);
+    --letter-seal-bg1: #d8b4fe;
+    --letter-seal-bg2: #9333ea;
+    --letter-seal-glow: rgba(192, 132, 252, 0.85);
+    --letter-modal-accent: #9333ea;
+    --letter-modal-btn-gradient: linear-gradient(135deg, #9333ea 0%, #c084fc 100%);
+  }
+
+  /* 💙 Theme 8: Xanh Lam Đêm (Midnight Blue - Trầm lắng, huyền ảo, đồng tông bầu trời) */
+  body[data-flower-color="blue"],
+  .flowers[data-flower-color="blue"] {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #bfdbfe 0%, #60a5fa 22%, #2563eb 50%, #1e40af 75%, #0b1a3a 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #dbeafe 0%, #93c5fd 25%, #3b82f6 52%, #1d4ed8 78%, #0f244d 100%);
+    --fl-leaf-border: #1e3a8a;
+    --fl-leaf-shadow: 0 0 1vmin rgba(37, 99, 235, 0.45);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(29, 78, 216, 0.4);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #93c5fd 0%, #1d4ed8 68%, #081226 100%);
+    --fl-center-border: #1e40af;
+    --fl-center-shadow: 0 0 0.8vmin rgba(29, 78, 216, 0.45);
+    --fl-glow: rgba(37, 99, 235, 0.45);
+    --fl-mini-petal-bg: radial-gradient(circle at 50% 20%, #bfdbfe 0%, #3b82f6 45%, #172554 100%);
+    --fl-mini-petal-border: #1e3a8a;
+    --fl-mini-glow: rgba(59, 130, 246, 0.55);
+
+    --letter-border-color: #2563eb;
+    --letter-border-glow: rgba(37, 99, 235, 0.4);
+    --letter-seal-bg1: #3b82f6;
+    --letter-seal-bg2: #1e3a8a;
+    --letter-seal-glow: rgba(37, 99, 235, 0.65);
+    --letter-modal-accent: #1e3a8a;
+    --letter-modal-btn-gradient: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+  }
+
+  /* 🤍 Theme 9: Trắng Tinh Khôi (Pure White - Thuần khiết, trang nhã) */
+  body[data-flower-color="white"],
+  .flowers[data-flower-color="white"] {
+    --fl-leaf-outer-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #fffdf0 30%, #fef3c7 60%, #cbd5e1 88%, #94a3b8 100%);
+    --fl-leaf-inner-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #fffdf5 30%, #fef9c3 55%, #e2e8f0 80%, #cbd5e1 100%);
+    --fl-leaf-border: #94a3b8;
+    --fl-leaf-shadow: 0 0 1vmin rgba(255, 255, 255, 0.7);
+    --fl-leaf-inner-shadow: 0 0 0.6vmin rgba(254, 240, 138, 0.5);
+    --fl-center-bg: radial-gradient(circle at 30% 30%, #fef08a 0%, #facc15 75%, #ca8a04 100%);
+    --fl-center-border: #eab308;
+    --fl-center-shadow: 0 0 0.8vmin rgba(250, 204, 21, 0.6);
+    --fl-glow: rgba(255, 255, 255, 0.8);
+    --fl-mini-petal-bg: radial-gradient(circle at 50% 20%, #ffffff 0%, #fffdf0 30%, #fef3c7 60%, #cbd5e1 88%, #94a3b8 100%);
+    --fl-mini-petal-border: #94a3b8;
+    --fl-mini-glow: rgba(255, 255, 255, 0.85);
+
+    --letter-border-color: #facc15;
+    --letter-border-glow: rgba(250, 204, 21, 0.5);
+    --letter-seal-bg1: #fef08a;
+    --letter-seal-bg2: #ca8a04;
+    --letter-seal-glow: rgba(250, 204, 21, 0.85);
+    --letter-modal-accent: #ca8a04;
+    --letter-modal-btn-gradient: linear-gradient(135deg, #ca8a04 0%, #facc15 100%);
+  }
+
+    body {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    height: 100vh;
+    height: 100dvh;
+    height: var(--app-h, 100dvh);
+    min-height: 100vh;
+    min-height: 100dvh;
+    min-height: var(--app-h, 100dvh);
+    width: 100vw;
+    width: 100%;
+    max-width: 100%;
+    background-color: var(--dark-color);
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* ============================================================
+     🌸 MÀN HÌNH MỞ ĐẦU: RÈM MỜ FROSTED GLASS & NÚT VÂN TAY Ở ĐÁY
+     ============================================================ */
+    .intro-curtain-overlay {
+    position: fixed;
+    inset: 0;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100vw;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    height: 100%;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 24px 24px calc(env(safe-area-inset-bottom, 0px) + 50px);
+    overflow: hidden;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+  }
+
+  /* Lớp màn sương đêm che phủ và làm mờ */
+  .intro-curtain-overlay::before {
+    content: '';
+    position: absolute;
+    inset: -30px 0;
+    z-index: -1;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    background: 
+      radial-gradient(circle at 50% 30%, rgba(30, 64, 175, 0.45) 0%, rgba(15, 23, 42, 0.75) 55%, rgba(6, 12, 26, 0.9) 100%),
+      linear-gradient(180deg, rgba(10, 18, 42, 0.65) 0%, rgba(15, 23, 42, 0.85) 100%);
+    opacity: 1;
+    transition: opacity 0.45s ease-out, backdrop-filter 0.45s ease-out, -webkit-backdrop-filter 0.45s ease-out;
+  }
+
+  /* Khi ấn giữ: Màn sương đêm tan chậm rãi lúc đầu để giữ bí mật, chỉ mở sáng dần về cuối */
+  .intro-curtain-overlay.is-holding-veil::before {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+    transition: 
+      opacity 1s cubic-bezier(0.8, 0, 0.9, 0.2), 
+      backdrop-filter 1s cubic-bezier(0.8, 0, 0.9, 0.2), 
+      -webkit-backdrop-filter 1s cubic-bezier(0.8, 0, 0.9, 0.2);
+  }
+
+  /* Trạng thái tan biến hoàn tất (Dissolve & Fade Out chậm rãi, thơ mộng) */
+  .intro-curtain-overlay.is-dissolving,
+  .intro-curtain-overlay.is-curtain-lifting,
+  .intro-curtain-overlay.is-closing {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.85s cubic-bezier(0.33, 1, 0.68, 1) 0.1s, visibility 0.95s ease;
+  }
+
+  /* Nút vân tay và khu vực đáy tan biến nhẹ bay lên từ dưới */
+  .intro-curtain-overlay.is-dissolving .fingerprint-bottom-bar,
+  .intro-curtain-overlay.is-curtain-lifting .fingerprint-bottom-bar,
+  .intro-curtain-overlay.is-closing .fingerprint-bottom-bar {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+    transition: opacity 0.75s cubic-bezier(0.4, 0, 0.2, 1) 0.2s, transform 0.85s cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+
+  /* ============================================================
+     🔘 KHU VỰC NÚT VÂN TAY Ở ĐÁY MÀN HÌNH
+     ============================================================ */
+  .fingerprint-bottom-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    z-index: 5;
+    padding-bottom: 0;
+    animation: footerFadeIn 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .fingerprint-guide-text {
+    font-size: clamp(0.86rem, 3vw, 0.96rem);
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 0 14px rgba(244, 114, 182, 0.8), 0 2px 6px rgba(0, 0, 0, 0.4);
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    animation: guideBreathe 2.8s ease-in-out infinite alternate;
+  }
+
+  .fingerprint-btn-wrap {
+    position: relative;
+    width: 82px;
+    height: 82px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: none;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Vòng sóng hào quang tỏa ra từ nút vân tay */
+  .fp-ripple {
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(56, 189, 248, 0.5);
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  .fp-ripple.r1 {
+    animation: fpRipplePulse 2.8s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+  }
+
+  .fp-ripple.r2 {
+    animation: fpRipplePulse 2.8s cubic-bezier(0.1, 0.8, 0.3, 1) 1.3s infinite;
+  }
+
+  @keyframes fpRipplePulse {
+    0% {
+      transform: scale(0.95);
+      opacity: 0.85;
+      border-color: rgba(125, 211, 252, 0.7);
+    }
+    50% {
+      border-color: rgba(56, 189, 248, 0.5);
+    }
+    100% {
+      transform: scale(1.75);
+      opacity: 0;
+      border-color: rgba(56, 189, 248, 0);
+    }
+  }
+
+  /* Vòng tròn tiến trình SVG quanh vân tay */
+  .fp-progress-svg {
+    position: absolute;
+    inset: -6px;
+    width: 94px;
+    height: 94px;
+    transform: rotate(-90deg);
+    pointer-events: none;
+    overflow: visible;
+    /* Quầng sáng đặt ở thẻ svg (không đặt trên circle) → không bị cắt thành ô vuông */
+    filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.85)) drop-shadow(0 0 10px rgba(96, 165, 250, 0.5));
+  }
+
+  .fp-progress-track {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.18);
+    stroke-width: 3.5;
+  }
+
+  .fp-progress-bar {
+    fill: none;
+    stroke: var(--fp-progress-stroke, #f59e0b);
+    stroke-width: 3.5;
+    stroke-linecap: round;
+    stroke-dasharray: 276.46;
+    stroke-dashoffset: 276.46;
+    transition: stroke-dashoffset 0.25s ease-out, stroke 0.35s ease;
+  }
+
+  /* Nút tròn chứa quả cầu pha lê trong suốt & hoa mini */
+  .fp-sensor-core {
+    width: 74px;
+    height: 74px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    /* Tone màu xanh đêm twilight thẫm, huyền ảo và dịu mắt đồng bộ với bầu trời đêm màn chính */
+    background: radial-gradient(circle at 50% 35%, 
+      rgba(56, 189, 248, 0.28) 0%, 
+      rgba(30, 64, 175, 0.55) 40%, 
+      rgba(23, 37, 84, 0.82) 75%, 
+      rgba(10, 15, 30, 0.94) 100%
+    );
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 
+      0 0 25px rgba(37, 99, 235, 0.55),
+      0 0 50px rgba(15, 23, 42, 0.65),
+      inset 0 0 16px rgba(255, 255, 255, 0.45);
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Vệt bóng kính 3D phản quang phía trên lồng */
+  .dome-glass-glare {
+    position: absolute;
+    top: 5px;
+    left: 12px;
+    width: 32px;
+    height: 16px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 80%);
+    transform: rotate(-25deg);
+    pointer-events: none;
+    z-index: 10;
+    transition: opacity 0.3s ease;
+  }
+
+  /* Hệ sinh thái hoa mini trong lồng */
+  .mini-terrarium {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 4;
+  }
+
+  /* Hệ thống mầm hoa vươn cao & hé nở theo thời gian giữ */
+  .mini-sprout-system {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    z-index: 3;
+    pointer-events: none;
+    transform-origin: bottom center;
+  }
+
+  /* Thân cây mầm xanh */
+  .mini-stem {
+    width: 3.5px;
+    height: 7px;
+    background: linear-gradient(to top, #047857 0%, #10b981 60%, #34d399 100%);
+    border-radius: 2px;
+    position: relative;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.7);
+    transition: height 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  /* Lá non nhú ra hai bên thân */
+  .mini-leaf {
+    position: absolute;
+    bottom: 3px;
+    width: 7px;
+    height: 11px;
+    background: linear-gradient(135deg, #6ee7b7 0%, #10b981 70%, #047857 100%);
+    box-shadow: 0 0 4px rgba(16, 185, 129, 0.6);
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .mini-leaf--left {
+    right: 3px;
+    border-radius: 9px 0 9px 0;
+    transform-origin: bottom right;
+    transform: scale(0.2) rotate(-5deg);
+    opacity: 0;
+  }
+
+  .mini-leaf--right {
+    left: 3px;
+    border-radius: 0 9px 0 9px;
+    transform-origin: bottom left;
+    transform: scale(0.2) rotate(5deg);
+    opacity: 0;
+  }
+
+  /* Búp hoa / Bông hoa Tulip mini */
+  .mini-blossom {
+    position: absolute;
+    bottom: 5px;
+    width: 20px;
+    height: 24px;
+    transform-origin: bottom center;
+    transform: translateY(0) scale(0.7);
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  /* Các cánh hoa tulip mini đồng bộ màu chuẩn với hoa màn chính */
+  .mini-petal {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    border-radius: 50% 50% 40% 40% / 60% 60% 40% 40%;
+    transform-origin: bottom center;
+    background: var(--fl-mini-petal-bg, radial-gradient(circle at 50% 20%, #ffe0f0 0%, #ff8fcf 30%, #e75480 60%, #c2185b 80%, #880e4f 100%));
+    border: 1px solid var(--fl-mini-petal-border, #c2185b);
+    box-shadow: 0 0 6px var(--fl-mini-glow, rgba(255, 179, 222, 0.75));
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .mini-petal--back {
+    width: 14px;
+    height: 19px;
+    transform: translate(-50%, 0) scale(0.85);
+    z-index: 1;
+  }
+
+  .mini-petal--left {
+    width: 13px;
+    height: 18px;
+    transform: translate(-50%, 0) rotate(-6deg) scale(0.85);
+    z-index: 2;
+  }
+
+  .mini-petal--right {
+    width: 13px;
+    height: 18px;
+    transform: translate(-50%, 0) rotate(6deg) scale(0.85);
+    z-index: 2;
+  }
+
+  .mini-petal--center {
+    width: 11px;
+    height: 16px;
+    transform: translate(-50%, 0) scale(0.85);
+    background: var(--fl-leaf-inner-bg, radial-gradient(circle at 50% 20%, #fff0fa 0%, #ffb3de 30%, #ff8fcf 55%, #e75480 80%, #c2185b 100%));
+    z-index: 3;
+  }
+
+  .mini-petal--front {
+    width: 9px;
+    height: 13px;
+    transform: translate(-50%, 1px) scale(0.85);
+    z-index: 4;
+  }
+
+  /* Hào quang & tia sáng hạt bụi tiên phát sáng quanh hoa */
+  .mini-flower-glow {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #ffdd00;
+    filter: blur(5px);
+    opacity: 0.3;
+    pointer-events: none;
+    transition: all 0.4s ease;
+  }
+
+  .mini-sparkle {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 6px #fff, 0 0 10px #f472b6;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .mini-sparkle.sp1 { top: -4px; left: 2px; }
+  .mini-sparkle.sp2 { top: 4px; right: -2px; }
+  .mini-sparkle.sp3 { bottom: 8px; left: -4px; }
+
+  /* Hover effect trên desktop */
+  .fingerprint-btn-wrap:hover .fp-sensor-core {
+    transform: scale(1.06);
+    border-color: #ffffff;
+    box-shadow: 
+      0 0 35px rgba(56, 189, 248, 0.75),
+      0 0 65px rgba(30, 64, 175, 0.55),
+      inset 0 0 20px rgba(255, 255, 255, 0.55);
+  }
+
+  /* === TRẠNG THÁI ẤN GIỮ (NẢY MẦM & HOA NỞ TRONG 1.45 GIÂY) === */
+  .fingerprint-btn-wrap.is-pressing .fp-progress-bar {
+    stroke-dashoffset: 0 !important;
+    stroke: var(--fp-progress-stroke, #f59e0b);
+    transition: stroke-dashoffset 1s linear, stroke 0.35s ease;
+  }
+
+  .fingerprint-btn-wrap.is-pressing .fp-sensor-core {
+    transform: scale(1.03);
+    border-color: #ffffff;
+    background: radial-gradient(circle at 50% 25%, 
+      rgba(56, 189, 248, 0.45) 0%, 
+      rgba(30, 64, 175, 0.7) 45%, 
+      rgba(23, 37, 84, 0.9) 75%, 
+      rgba(10, 15, 30, 0.98) 100%
+    );
+    box-shadow: 
+      0 0 45px rgba(56, 189, 248, 0.85),
+      0 0 80px rgba(30, 64, 175, 0.7),
+      inset 0 0 22px rgba(255, 255, 255, 0.65);
+  }
+
+  /* Thân cây vươn cao trong 1.45s */
+  .fingerprint-btn-wrap.is-pressing .mini-stem {
+    height: 27px;
+    transition: height 1s cubic-bezier(0.3, 0.1, 0.25, 1);
+  }
+
+  /* Lá non xòe rộng */
+  .fingerprint-btn-wrap.is-pressing .mini-leaf--left {
+    transform: scale(1) rotate(-42deg) translate(-2px, -3px);
+    opacity: 1;
+    transition: transform 1.2s cubic-bezier(0.3, 0.1, 0.25, 1) 0.2s, opacity 0.35s 0.2s;
+  }
+
+  .fingerprint-btn-wrap.is-pressing .mini-leaf--right {
+    transform: scale(1) rotate(42deg) translate(2px, -3px);
+    opacity: 1;
+    transition: transform 1.2s cubic-bezier(0.3, 0.1, 0.25, 1) 0.3s, opacity 0.35s 0.3s;
+  }
+
+  /* Búp hoa vươn lên đỉnh lồng kính và bung nở */
+  .fingerprint-btn-wrap.is-pressing .mini-blossom {
+    transform: translateY(-24px) scale(1.2);
+    transition: transform 1s cubic-bezier(0.3, 0.1, 0.25, 1);
+  }
+
+  /* Các cánh hoa xòe cánh bung nở rực rỡ */
+  .fingerprint-btn-wrap.is-pressing .mini-petal--back {
+    transform: translate(-50%, -2px) scale(1.08);
+    transition: transform 1s cubic-bezier(0.3, 0.1, 0.25, 1);
+  }
+  .fingerprint-btn-wrap.is-pressing .mini-petal--left {
+    transform: translate(-55%, 0) rotate(-24deg) scale(1.1);
+    transition: transform 1s cubic-bezier(0.3, 0.1, 0.25, 1);
+  }
+  .fingerprint-btn-wrap.is-pressing .mini-petal--right {
+    transform: translate(-45%, 0) rotate(24deg) scale(1.1);
+    transition: transform 1s cubic-bezier(0.3, 0.1, 0.25, 1);
+  }
+  .fingerprint-btn-wrap.is-pressing .mini-petal--center {
+    transform: translate(-50%, -3px) rotate(0deg) scale(1.12);
+    transition: transform 1s cubic-bezier(0.3, 0.1, 0.25, 1);
+  }
+  .fingerprint-btn-wrap.is-pressing .mini-petal--front {
+    transform: translate(-50%, 1px) scale(1.05);
+    transition: transform 1s cubic-bezier(0.3, 0.1, 0.25, 1);
+  }
+
+  /* Hào quang bừng sáng rực rỡ & bụi tiên lấp lánh */
+  .fingerprint-btn-wrap.is-pressing .mini-flower-glow {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(2.2);
+    box-shadow: 0 0 20px #ffdd00, 0 0 35px #f472b6, 0 0 50px #fbcfe8;
+    transition: all 1s ease;
+  }
+
+  .fingerprint-btn-wrap.is-pressing .mini-sparkle {
+    opacity: 0.9;
+    animation: sparkleFloat 1.2s ease-in-out infinite alternate;
+  }
+  .fingerprint-btn-wrap.is-pressing .mini-sparkle.sp2 { animation-delay: 0.3s; }
+  .fingerprint-btn-wrap.is-pressing .mini-sparkle.sp3 { animation-delay: 0.6s; }
+
+  @keyframes sparkleFloat {
+    0% { transform: translateY(0) scale(0.8); opacity: 0.4; }
+    100% { transform: translateY(-5px) scale(1.4); opacity: 1; }
+  }
+
+  /* === HIỆU ỨNG BỪNG NỞ HÀO QUANG DỊU DÀNG (BLOOM AURA RELEASE - KHÔNG NỨT VỠ) === */
+  .mini-bloom-aura {
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(56, 189, 248, 0.75) 40%, rgba(37, 99, 235, 0.45) 70%, transparent 85%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 12;
+    transform: scale(0.6);
+  }
+
+  .fingerprint-btn-wrap.is-bloomed .mini-bloom-aura {
+    animation: bloomAuraRelease 0.75s cubic-bezier(0.15, 0.85, 0.35, 1.2) forwards;
+  }
+
+  @keyframes bloomAuraRelease {
+    0% {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    35% {
+      opacity: 0.85;
+      transform: scale(1.4);
+      filter: drop-shadow(0 0 18px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 28px rgba(56, 189, 248, 0.6));
+    }
+    100% {
+      opacity: 0;
+      transform: scale(2.2);
+      filter: drop-shadow(0 0 35px rgba(56, 189, 248, 0));
+    }
+  }
+
+  /* Bông hoa mini bung nở ngập tràn hạnh phúc */
+  .fingerprint-btn-wrap.is-bloomed .mini-sprout-system {
+    animation: flowerGentleBloom 0.75s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+  }
+
+  @keyframes flowerGentleBloom {
+    0% {
+      transform: translateX(-50%) scale(1.2);
+    }
+    45% {
+      transform: translateX(-50%) scale(1.4);
+      filter: brightness(1.25) drop-shadow(0 0 16px #ffb3de);
+    }
+    100% {
+      transform: translateX(-50%) scale(1.55);
+      opacity: 0.85;
+    }
+  }
+
+  /* === HIỆU ỨNG BÙNG NỔ ÁNH SÁNG DỊU DÀNG & MẬP MỜ (GENTLE MISTY WHITE-BLUE BURST) === */
+  /* Vòng sóng xung kích ánh sáng mờ ảo, nhẹ nhàng */
+  .fp-burst-shockwave {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 74px;
+    height: 74px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.75);
+    box-shadow: 
+      0 0 16px rgba(255, 255, 255, 0.65),
+      0 0 32px rgba(56, 189, 248, 0.45),
+      inset 0 0 16px rgba(56, 189, 248, 0.3);
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 20;
+  }
+
+  .fingerprint-btn-wrap.is-bloomed .fp-burst-shockwave {
+    animation: shockwaveExplode 0.7s cubic-bezier(0.16, 0.85, 0.35, 1) forwards;
+  }
+
+  @keyframes shockwaveExplode {
+    0% {
+      opacity: 0.75;
+      transform: translate(-50%, -50%) scale(0.95);
+      border-width: 2px;
+    }
+    50% {
+      opacity: 0.5;
+      border-color: rgba(125, 211, 252, 0.6);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(1.85);
+      border-width: 1px;
+    }
+  }
+
+  /* Chớp sáng bùng nổ trung tâm - mập mờ, dịu mắt */
+  .fp-burst-flash {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: radial-gradient(circle, 
+      rgba(255, 255, 255, 0.85) 0%, 
+      rgba(125, 211, 252, 0.5) 35%, 
+      rgba(56, 189, 248, 0.2) 65%, 
+      transparent 80%
+    );
+    transform: translate(-50%, -50%) scale(0.4);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 24;
+    mix-blend-mode: screen;
+  }
+
+  .fingerprint-btn-wrap.is-bloomed .fp-burst-flash {
+    animation: burstFlashFlash 0.65s cubic-bezier(0.15, 0.85, 0.3, 1) forwards;
+  }
+
+  @keyframes burstFlashFlash {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.4);
+    }
+    20% {
+      opacity: 0.7;
+      transform: translate(-50%, -50%) scale(1.4);
+    }
+    50% {
+      opacity: 0.4;
+      transform: translate(-50%, -50%) scale(1.9);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(2.3);
+    }
+  }
+
+  /* Nút bấm bung nở nhẹ nhàng, dịu mắt */
+  .fingerprint-btn-wrap.is-bloomed .fp-sensor-core {
+    animation: buttonBurstPop 0.75s cubic-bezier(0.18, 0.9, 0.32, 1.2) forwards;
+  }
+
+  @keyframes buttonBurstPop {
+    0% {
+      transform: scale(1.02);
+    }
+    30% {
+      transform: scale(1.12);
+      border-color: #ffffff;
+      box-shadow: 
+        0 0 25px rgba(255, 255, 255, 0.8),
+        0 0 45px rgba(56, 189, 248, 0.6),
+        inset 0 0 18px rgba(255, 255, 255, 0.7);
+    }
+    100% {
+      transform: scale(1.05);
+      opacity: 0.85;
+    }
+  }
+
+  /* === CÁC HẠT SÁNG TRÒN MA THUẬT TỎA 360 ĐỘ (GLOWING LIGHT PARTICLES - KHÔNG TIA NHỌN) === */
+  .fp-magic-burst {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    z-index: 25;
+  }
+
+  .light-particle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--size, 3.5px);
+    height: var(--size, 3.5px);
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 40%, #ffffff 30%, var(--color, #7dd3fc) 100%);
+    box-shadow: 
+      0 0 6px #ffffff,
+      0 0 12px var(--color, #38bdf8),
+      0 0 20px rgba(125, 211, 252, 0.45);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+    mix-blend-mode: screen;
+  }
+
+  .fingerprint-btn-wrap.is-bloomed .light-particle {
+    animation: particleGentleBurst 0.8s cubic-bezier(0.12, 0.85, 0.28, 1) forwards;
+  }
+
+  /* 16 hạt sáng bùng nổ xuất phát từ NGOÀI VIỀN nút ấn (bán kính 46px - 48px) tỏa ra ngoài */
+  .light-particle.p1  { --angle: 0deg;   --start-r: 46px; --scatter: 38px; --size: 4.2px; --color: #ffffff; }
+  .light-particle.p2  { --angle: 22.5deg;--start-r: 48px; --scatter: 28px; --size: 2.8px; --color: #7dd3fc; }
+  .light-particle.p3  { --angle: 45deg;  --start-r: 45px; --scatter: 42px; --size: 4.5px; --color: #bae6fd; }
+  .light-particle.p4  { --angle: 67.5deg;--start-r: 47px; --scatter: 26px; --size: 2.6px; --color: #38bdf8; }
+  .light-particle.p5  { --angle: 90deg;  --start-r: 46px; --scatter: 38px; --size: 4.2px; --color: #ffffff; }
+  .light-particle.p6  { --angle: 112.5deg;--start-r: 48px;--scatter: 28px; --size: 2.8px; --color: #7dd3fc; }
+  .light-particle.p7  { --angle: 135deg; --start-r: 45px; --scatter: 42px; --size: 4.5px; --color: #bae6fd; }
+  .light-particle.p8  { --angle: 157.5deg;--start-r: 47px;--scatter: 26px; --size: 2.6px; --color: #38bdf8; }
+  .light-particle.p9  { --angle: 180deg; --start-r: 46px; --scatter: 38px; --size: 4.2px; --color: #ffffff; }
+  .light-particle.p10 { --angle: 202.5deg;--start-r: 48px;--scatter: 28px; --size: 2.8px; --color: #7dd3fc; }
+  .light-particle.p11 { --angle: 225deg; --start-r: 45px; --scatter: 42px; --size: 4.5px; --color: #bae6fd; }
+  .light-particle.p12 { --angle: 247.5deg;--start-r: 47px;--scatter: 26px; --size: 2.6px; --color: #38bdf8; }
+  .light-particle.p13 { --angle: 270deg; --start-r: 46px; --scatter: 38px; --size: 4.2px; --color: #ffffff; }
+  .light-particle.p14 { --angle: 292.5deg;--start-r: 48px;--scatter: 28px; --size: 2.8px; --color: #7dd3fc; }
+  .light-particle.p15 { --angle: 315deg; --start-r: 45px; --scatter: 42px; --size: 4.5px; --color: #bae6fd; }
+  .light-particle.p16 { --angle: 337.5deg;--start-r: 47px;--scatter: 26px; --size: 2.6px; --color: #38bdf8; }
+
+  @keyframes particleGentleBurst {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -50%) rotate(var(--angle)) translateY(var(--start-r, 46px)) scale(0.2);
+    }
+    20% {
+      opacity: 0.9;
+      transform: translate(-50%, -50%) rotate(var(--angle)) translateY(calc(var(--start-r, 46px) + var(--scatter, 32px) * 0.35)) scale(1.3);
+    }
+    55% {
+      opacity: 0.65;
+      transform: translate(-50%, -50%) rotate(var(--angle)) translateY(calc(var(--start-r, 46px) + var(--scatter, 32px) * 0.8)) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -50%) rotate(var(--angle)) translateY(calc(var(--start-r, 46px) + var(--scatter, 32px))) scale(0.3);
+    }
+  }
+
+  @keyframes guideBreathe {
+    0% { opacity: 0.82; transform: translateY(0); }
+    100% { opacity: 1; transform: translateY(-3px); }
+  }
+
+  @keyframes headerFadeIn {
+    0% { opacity: 0; transform: translateY(-16px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes footerFadeIn {
+    0% { opacity: 0; transform: translateY(16px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes badgeFloat {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-3px); }
+  }
+
+
+  /* Intro: chữ bằng hạt trên nền trang, fade in khi hiện / fade out khi ẩn */
+  .intro {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: clamp(2.8rem, 7vh, 4.8rem);
+    padding-left: clamp(20px, 4.5vw, 36px);
+    padding-right: clamp(20px, 4.5vw, 36px);
+    pointer-events: none;
+    animation: introFadeIn 3s ease-out backwards;
+    transition: opacity 1.2s ease, visibility 1.2s ease;
+  }
+
+  /* Wrapper bọc ngoài chữ */
+  .intro__mask-wrap {
+    display: inline-block;
+    width: auto;
+    max-width: 100%;
+    padding: 24px 20px;
+    margin: 0;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  .intro.is-done {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 1.2s ease, visibility 1.2s ease;
+  }
+
+  @keyframes introFadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  /* Chữ lời chúc 20/10 mở đầu - Sáng rạng rỡ, rõ nét 100%, ánh hào quang hồng ngọt ngào */
+  .intro__text {
+    font-family: 'Dancing Script', 'Comfortaa', cursive, sans-serif;
+    font-size: clamp(2.2rem, 7.5vw, 4.2rem);
+    font-weight: 700;
+    margin: 0;
+    padding: 0 16px;
+    width: 100%;
+    max-width: min(94vw, 1150px);
+    line-height: 1.35;
+    word-break: break-word;
+    text-align: center;
+    letter-spacing: 0.02em;
+    color: #ffffff;
+    background: linear-gradient(135deg, #ffffff 15%, #ffe4e6 55%, #f472b6 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: 
+      drop-shadow(0 2px 8px rgba(0, 0, 0, 0.75))
+      drop-shadow(0 0 16px rgba(244, 114, 182, 0.85))
+      drop-shadow(0 0 36px rgba(236, 72, 153, 0.6));
+    animation: introTextReveal 2.2s ease-out both;
+  }
+
+  @keyframes introTextReveal {
+    0% {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+    35% {
+      opacity: 0.25;
+      transform: scale(0.98);
+    }
+    65% {
+      opacity: 0.6;
+      transform: scale(1.01);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+    .night {
+    position: fixed;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    width: 100vw;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    height: 100%;
+    filter: blur(0.1vmin);
+    background: url('../assets/images/bg.jpg') center center / cover no-repeat;
+    z-index: 0;
+  }
+  /* === HẠT BỤI VÀNG HOÀNG KIM BAY LƠ LỬNG (GOLDEN STARDUST PARTICLES) === */
+  .particles {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100vw;
+    height: var(--app-h);
+    pointer-events: none;
+    z-index: 3;
+    overflow: hidden;
+    contain: strict;
+    isolation: isolate;
+  }
+  .particle {
+    position: absolute;
+    bottom: -15px;
+    width: 0.7vmin;
+    height: 0.7vmin;
+    border-radius: 50%;
+    will-change: transform, opacity;
+    /* Gradient tâm sáng trắng ấm tỏa sang vàng hoàng kim hổ phách 3D */
+    background: radial-gradient(circle at 35% 35%, #ffffff 12%, #fef08a 38%, #facc15 70%, #ca8a04 100%);
+    /* Hào quang vàng kim hoàng gia phát sáng lung linh */
+    box-shadow: 
+      0 0 5px #ffffff,
+      0 0 10px #facc15,
+      0 0 20px rgba(234, 179, 8, 0.75),
+      0 0 32px rgba(202, 138, 4, 0.4);
+    mix-blend-mode: screen;
+    animation: particle-up-gold linear infinite;
+  }
+  @keyframes particle-up-gold {
+    0% {
+      transform: translateY(0) translateX(0) scale(0.5);
+      opacity: 0;
+    }
+    12% {
+      opacity: 0.9;
+      transform: translateY(-12vh) translateX(6px) scale(1.1);
+    }
+    35% {
+      opacity: 0.85;
+      transform: translateY(-35vh) translateX(-8px) scale(0.95);
+    }
+    60% {
+      opacity: 0.95;
+      transform: translateY(-60vh) translateX(10px) scale(1.15);
+    }
+    85% {
+      opacity: 0.75;
+      transform: translateY(-85vh) translateX(-5px) scale(0.9);
+    }
+    100% {
+      transform: translateY(-108vh) translateX(4px) scale(0.4);
+      opacity: 0;
+    }
+  }
+
+  .shooting-stars {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .shooting-star {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 6px 2px rgba(255, 255, 255, 0.8);
+    opacity: 0;
+    animation: shootingStar 6s linear infinite;
+  }
+
+  .shooting-star::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%);
+    animation: shootingStarTail 6s linear infinite;
+  }
+
+  .shooting-star:nth-child(1) {
+    top: 10%;
+    left: -10%;
+    animation-delay: 0s;
+    animation-duration: 5.5s;
+  }
+
+  .shooting-star:nth-child(2) {
+    top: 25%;
+    left: -10%;
+    animation-delay: 4s;
+    animation-duration: 6s;
+  }
+
+  .shooting-star:nth-child(3) {
+    top: 40%;
+    left: -10%;
+    animation-delay: 8s;
+    animation-duration: 5.8s;
+  }
+
+  @keyframes shootingStar {
+    0% {
+      opacity: 0;
+      transform: translateX(0) translateY(0) rotate(45deg);
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateX(120vw) translateY(50vh) rotate(10deg);
+    }
+  }
+
+  @keyframes shootingStarTail {
+    0% {
+      width: 0;
+    }
+    30% {
+      width: 100px;
+    }
+    100% {
+      width: 0;
+    }
+  }
+
+  .flowers {
+    position: relative;
+    transform: scale(0.7) translateY(-4.5vmin);
+    z-index: 2;
+    will-change: transform;
+  }
+
+  .flower {
+    position: absolute;
+    bottom: 31vmin;
+    transform-origin: bottom center;
+    z-index: 50;
+    will-change: transform;
+  }
+
+  /* Bông 1: Đỉnh trung tâm */
+  .flower--1 {
+    left: 50%;
+    z-index: 50;
+    transform: rotate(0deg);
+    animation: moving-flower-1 4s linear infinite;
+  }
+  .flower--1 .flower__line {
+    height: 65vmin;
+    animation-delay: 0.3s;
+  }
+  .flower--1 .flower__line__leaf--1 { animation: blooming-leaf-right var(--fl-speed) 1.6s backwards; }
+  .flower--1 .flower__line__leaf--2 { animation: blooming-leaf-right var(--fl-speed) 1.4s backwards; }
+  .flower--1 .flower__line__leaf--3 { animation: blooming-leaf-left var(--fl-speed) 1.2s backwards; }
+  .flower--1 .flower__line__leaf--4 { animation: blooming-leaf-left var(--fl-speed) 1s backwards; }
+
+  /* Bông 2: Tầng trước ôm giữa phải */
+  .flower--2 {
+    left: 52%;
+    z-index: 55;
+    transform: rotate(8deg);
+    animation: moving-flower-2 4s linear infinite;
+  }
+  .flower--2 .flower__line {
+    height: 50vmin;
+    animation-delay: 0.6s;
+  }
+  .flower--2 .flower__line__leaf--1 { animation: blooming-leaf-right var(--fl-speed) 1.9s backwards; }
+  .flower--2 .flower__line__leaf--2 { animation: blooming-leaf-right var(--fl-speed) 1.7s backwards; }
+  .flower--2 .flower__line__leaf--3 { animation: blooming-leaf-left var(--fl-speed) 1.5s backwards; }
+  .flower--2 .flower__line__leaf--4 { animation: blooming-leaf-left var(--fl-speed) 1.3s backwards; }
+
+  /* Bông 3: Tầng trước ôm giữa trái */
+  .flower--3 {
+    left: 48%;
+    z-index: 55;
+    transform: rotate(-8deg);
+    animation: moving-flower-3 4s linear infinite;
+  }
+  .flower--3 .flower__line {
+    height: 50vmin;
+    animation-delay: 0.9s;
+  }
+  .flower--3 .flower__line__leaf--1 { animation: blooming-leaf-right var(--fl-speed) 2.5s backwards; }
+  .flower--3 .flower__line__leaf--2 { animation: blooming-leaf-right var(--fl-speed) 2.3s backwards; }
+  .flower--3 .flower__line__leaf--3 { animation: blooming-leaf-left var(--fl-speed) 2.1s backwards; }
+  .flower--3 .flower__line__leaf--4 { animation: blooming-leaf-left var(--fl-speed) 1.9s backwards; }
+
+  /* Bông 4: Vương miện cao bên trái */
+  .flower--4 {
+    left: 46%;
+    z-index: 20;
+    transform: rotate(-12deg);
+    animation: moving-flower-4 3.5s linear infinite;
+  }
+  .flower--4 .flower__line {
+    height: 70vmin;
+    animation-delay: 1.2s;
+  }
+  .flower--4 .flower__line__leaf--1 { animation: blooming-leaf-right var(--fl-speed) 2.8s backwards; }
+  .flower--4 .flower__line__leaf--2 { animation: blooming-leaf-right var(--fl-speed) 2.6s backwards; }
+  .flower--4 .flower__line__leaf--3 { animation: blooming-leaf-left var(--fl-speed) 2.4s backwards; }
+  .flower--4 .flower__line__leaf--4 { animation: blooming-leaf-left var(--fl-speed) 2.2s backwards; }
+
+  /* Bông 5: Vương miện cao bên phải */
+  .flower--5 {
+    left: 54%;
+    z-index: 20;
+    transform: rotate(12deg);
+    animation: moving-flower-5 4.5s linear infinite;
+  }
+  .flower--5 .flower__line {
+    height: 70vmin;
+    animation-delay: 1.9s;
+  }
+  .flower--5 .flower__line__leaf--1 { animation: blooming-leaf-right var(--fl-speed) 2.7s backwards; }
+  .flower--5 .flower__line__leaf--2 { animation: blooming-leaf-right var(--fl-speed) 2.5s backwards; }
+  .flower--5 .flower__line__leaf--3 { animation: blooming-leaf-left var(--fl-speed) 2.3s backwards; }
+  .flower--5 .flower__line__leaf--4 { animation: blooming-leaf-left var(--fl-speed) 2.1s backwards; }
+
+  /* Bông 6: Tầng dưới giữa trái */
+  .flower--6 {
+    left: 44%;
+    z-index: 45;
+    transform: rotate(-18deg);
+    animation: moving-flower-6 3.8s linear infinite;
+  }
+  .flower--6 .flower__line {
+    height: 43vmin;
+    animation-delay: 1.1s;
+  }
+
+  /* Bông 7: Tầng dưới giữa phải */
+  .flower--7 {
+    left: 56%;
+    z-index: 45;
+    transform: rotate(18deg);
+    animation: moving-flower-7 3.8s linear infinite;
+  }
+  .flower--7 .flower__line {
+    height: 43vmin;
+    animation-delay: 1.1s;
+  }
+
+  /* Bông 8: Tầng dưới ngoài trái */
+  .flower--8 {
+    left: 40%;
+    z-index: 40;
+    transform: rotate(-34deg);
+    animation: moving-flower-8 4.2s linear infinite;
+  }
+  .flower--8 .flower__line {
+    height: 40vmin;
+    animation-delay: 1.4s;
+  }
+
+  /* Bông 9: Tầng dưới ngoài phải */
+  .flower--9 {
+    left: 60%;
+    z-index: 40;
+    transform: rotate(34deg);
+    animation: moving-flower-9 4.2s linear infinite;
+  }
+  .flower--9 .flower__line {
+    height: 40vmin;
+    animation-delay: 1.4s;
+  }
+
+  /* Bông 10: Vai trên trái */
+  .flower--10 {
+    left: 42%;
+    z-index: 35;
+    transform: rotate(-24deg);
+    animation: moving-flower-10 4s linear infinite;
+  }
+  .flower--10 .flower__line {
+    height: 58vmin;
+    animation-delay: 1.3s;
+  }
+
+  /* Bông 11: Vai trên phải */
+  .flower--11 {
+    left: 58%;
+    z-index: 35;
+    transform: rotate(24deg);
+    animation: moving-flower-11 4.2s linear infinite;
+  }
+  .flower--11 .flower__line {
+    height: 58vmin;
+    animation-delay: 1.5s;
+  }
+
+  /* ============================================================
+     🎨 PHỐI ĐỘ ĐẬM NHẠT TỰ NHIÊN GIỮA CÁC BÔNG HOA TRONG BÓ
+     (Tạo độ sâu 3D, lớp trước sáng rạng rỡ, lớp sau thẫm ấm)
+     ============================================================ */
+  .flower--1 {
+    /* Bông trung tâm chính: cân đối, rạng rỡ */
+    filter: drop-shadow(0 0 1.2vmin var(--fl-glow, rgba(255, 179, 222, 0.4)));
+  }
+  .flower--2,
+  .flower--3 {
+    /* Tầng trên 2 bên: đón sáng nhiều hơn, hồng sáng tươi */
+    filter: brightness(1.08) saturate(0.96) drop-shadow(0 0 0.8vmin var(--fl-glow, rgba(255, 179, 222, 0.3)));
+  }
+  .flower--4,
+  .flower--5 {
+    /* Tầng giữa: hồng phấn đằm thắm */
+    filter: brightness(1.02) saturate(1.02);
+  }
+  .flower--6 {
+    /* Đỉnh sau: sáng nhẹ vươn cao */
+    filter: brightness(1.06) saturate(0.98);
+  }
+  .flower--7 {
+    /* Lớp sau: hơi thẫm tạo độ sâu */
+    filter: brightness(0.92) contrast(1.05) saturate(1.05);
+  }
+  .flower--8,
+  .flower--9 {
+    /* Tầng đáy 2 bên: tone hồng thẫm đậm đà làm nền nâng đỡ cả bó */
+    filter: brightness(0.89) contrast(1.08) saturate(1.08);
+  }
+  .flower--10,
+  .flower--11 {
+    /* Vai trên: cánh đón nắng mai, hồng nhạt thanh tao */
+    filter: brightness(1.07) saturate(0.94);
+  }
+
+  .flower__leafs {
+    position: relative;
+    animation: blooming-flower 3.5s backwards;
+    will-change: transform;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+
+  .flower__leafs--1 { animation-delay: 1.1s; }
+  .flower__leafs--2 { animation-delay: 1.3s; }
+  .flower__leafs--3 { animation-delay: 1.3s; }
+  .flower__leafs--4 { animation-delay: 1.5s; }
+  .flower__leafs--5 { animation-delay: 1.5s; }
+  .flower__leafs--6 { animation-delay: 1.7s; }
+  .flower__leafs--7 { animation-delay: 1.7s; }
+  .flower__leafs--8 { animation-delay: 1.9s; }
+  .flower__leafs--9 { animation-delay: 1.9s; }
+  .flower__leafs--10 { animation-delay: 2.1s; }
+  .flower__leafs--11 { animation-delay: 2.1s; }
+
+  .flower__leafs::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translate(-50%, -100%) translateZ(0);
+    width: 8vmin;
+    height: 8vmin;
+    background-color: #ffdd00;
+    border-radius: 50%;
+    /* Blur tĩnh — không animate filter, chỉ animate opacity.
+       opacity:0 → browser bỏ qua hoàn toàn việc render blur → không lag iOS */
+    filter: blur(4vmin);
+    opacity: 0;
+    animation: glow-appear 1s ease-out 5.5s forwards;
+    will-change: opacity;
+  }
+
+  @keyframes glow-appear {
+    to { opacity: 0.55; }
+  }
+
+  /* --- PÉTALOS DE TULIPÁN (MEJORADOS - THEME TÙY BIẾN) --- */
+  .flower__leaf {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 9vmin;
+    height: 15vmin;
+    background: var(--fl-leaf-outer-bg, radial-gradient(circle at 50% 20%, #ffe0f0 0%, #ff8fcf 30%, #e75480 60%, #c2185b 80%, #880e4f 100%));
+    border-radius: 50% 50% 40% 40% / 60% 60% 40% 40%;
+    transform-origin: bottom center;
+    opacity: 0.97;
+    z-index: 2;
+    border: 1.5px solid var(--fl-leaf-border, #c2185b);
+    /* box-shadow đơn giản hơn để giảm tải GPU trên iOS */
+    box-shadow: var(--fl-leaf-shadow, 0 0 1vmin rgba(255, 179, 222, 0.6));
+    will-change: transform;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+
+  /* Pétalos externos */
+  .flower__leaf--1 { transform: translate(-50%, -5%) rotate(-22deg); z-index: 1; }
+  .flower__leaf--2 { transform: translate(-50%, -5%) rotate(22deg);  z-index: 1; }
+  .flower__leaf--3 { transform: translate(-50%, -10%) rotate(0deg);  z-index: 2; }
+
+  /* Pétalos internos (más pequeños, para dar volumen) */
+  .flower__leaf--4,
+  .flower__leaf--5,
+  .flower__leaf--6 {
+    width: 7vmin;
+    height: 12vmin;
+    background: var(--fl-leaf-inner-bg, radial-gradient(circle at 50% 20%, #fff0fa 0%, #ffb3de 30%, #ff8fcf 55%, #e75480 80%, #c2185b 100%));
+    opacity: 0.96;
+    border: 1px solid var(--fl-leaf-border, #c2185b);
+    border-radius: 50% 50% 45% 45% / 65% 65% 35% 35%;
+    box-shadow: var(--fl-leaf-inner-shadow, 0 0 0.6vmin rgba(255, 179, 222, 0.5));
+    z-index: 3;
+  }
+
+  .flower__leaf--4 { transform: translate(-50%, -8%) rotate(-10deg); }
+  .flower__leaf--5 { transform: translate(-50%, -8%) rotate(10deg); }
+  .flower__leaf--6 { transform: translate(-50%, -12%) rotate(0deg); }
+
+  /* Centro del tulipán */
+  .flower__center {
+    position: absolute;
+    left: -2vmin;
+    top: -2vmin;
+    width: 4vmin;
+    height: 4vmin;
+    border-radius: 50%;
+    background:
+      var(--fl-center-bg, radial-gradient(circle at 30% 30%, #e0b3ff 0%, #a259e6 80%, #4b0066 100%));
+    border: 2px solid var(--fl-center-border, #a259e6);
+    box-shadow: var(--fl-center-shadow, 0 0 0.8vmin rgba(224, 179, 255, 0.6));
+    will-change: transform;
+    transform: translateZ(0);
+  }
+
+  .flower__line {
+    height: 48vmin;
+    width: 2vmin;
+    background-image: linear-gradient(
+        to left,
+        rgb(0, 0, 0, 0.3),
+        transparent,
+        rgba(255, 255, 255, 0.2)
+      ),
+      linear-gradient(to top, transparent 10%, #2d5016, #4a7c23, #6b8e23);
+    box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.7);
+    animation: grow-flower-tree 6s backwards;
+    will-change: height;
+    transform: translateZ(0);
+  }
+
+  .flower__line__leaf {
+    --w: 6.4vmin;
+    --h: calc(var(--w) + 3.4vmin);
+    position: absolute;
+    top: 20%;
+    left: 90%;
+    width: var(--w);
+    height: var(--h);
+    border-top-right-radius: var(--h);
+    border-bottom-left-radius: var(--h);
+    background-image: linear-gradient(
+      to top,
+      rgba(45, 80, 22, 0.6),
+      #4a7c23,
+      #6b8e23
+    );
+    will-change: transform;
+    transform: translateZ(0);
+  }
+
+  .flower__line__leaf--1 {
+    transform: rotate(70deg) translateZ(0);
+  }
+
+  .flower__line__leaf--2 {
+    top: 45%;
+    transform: rotate(70deg) translateZ(0);
+  }
+
+  .flower__line__leaf--3,
+  .flower__line__leaf--4 {
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-left-radius: var(--h);
+    border-bottom-right-radius: var(--h);
+    left: -460%;
+    top: 12%;
+    transform: rotate(-70deg) translateZ(0);
+  }
+
+  .flower__line__leaf--4 {
+    top: 40%;
+  }
+
+  /* Tỉa nhẹ các lá trùng lặp ở cành giữa để vừa đầy đặn vừa không bị rối */
+  .flower--1 .flower__line__leaf--4,
+  .flower--2 .flower__line__leaf--3,
+  .flower--3 .flower__line__leaf--1,
+  .flower--4 .flower__line__leaf--2 {
+    display: none !important;
+  }
+
+  .flower__light {
+    position: absolute;
+    bottom: 0vmin;
+    width: 0.8vmin;
+    height: 0.8vmin;
+    background-color: #fff;
+    border-radius: 50%;
+    animation: tulip-light 6s linear infinite backwards;
+    box-shadow: 0 0 0.6vmin rgba(255, 255, 255, 0.7);
+    will-change: transform, opacity;
+    transform: translateZ(0);
+  }
+
+  .flower__light:nth-child(odd) {
+    background-color: #fff;
+  }
+
+  .flower__light--1 { left: -2vmin; animation-delay: 1s; }
+  .flower__light--2 { left: 3vmin; animation-delay: 0.5s; }
+  .flower__light--3 { left: -6vmin; animation-delay: 0.3s; }
+  .flower__light--4 { left: 6vmin; animation-delay: 0.9s; }
+  .flower__light--5 { left: -1vmin; animation-delay: 1.5s; }
+  .flower__light--6 { left: -4vmin; animation-delay: 3s; }
+  .flower__light--7 { left: 3vmin; animation-delay: 2s; }
+  .flower__light--8 { left: -6vmin; animation-delay: 3.5s; }
+
+  .flower__grass {
+    --c: #4a7c23;
+    --line-w: 2vmin;
+    position: absolute;
+    bottom: 12vmin;
+    left: -7vmin;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    z-index: 20;
+    transform-origin: bottom center;
+    transform: rotate(-48deg) rotateY(40deg);
+  }
+
+  .flower__grass--1 {
+    animation: moving-grass 2s linear infinite;
+  }
+
+  .flower__grass--2 {
+    left: 2vmin;
+    bottom: 10vmin;
+    transform: scale(0.5) rotate(75deg) rotateX(10deg) rotateY(-200deg);
+    opacity: 0.8;
+    z-index: 0;
+    animation: moving-grass--2 1.5s linear infinite;
+  }
+
+  .flower__grass--3 {
+    left: -25vmin;
+    bottom: 8vmin;
+    transform: scale(0.7) rotate(-30deg) rotateY(45deg);
+    opacity: 0.9;
+    z-index: 15;
+    animation: moving-grass--3 2.2s linear infinite;
+  }
+
+  .flower__grass--4 {
+    left: -35vmin;
+    bottom: 15vmin;
+    transform: scale(0.4) rotate(60deg) rotateX(15deg) rotateY(-180deg);
+    opacity: 0.7;
+    z-index: 5;
+    animation: moving-grass--4 1.8s linear infinite;
+  }
+
+  .flower__grass--5 {
+    left: -18vmin;
+    bottom: 6vmin;
+    transform: scale(0.6) rotate(-60deg) rotateY(60deg);
+    opacity: 0.85;
+    z-index: 12;
+    animation: moving-grass--5 2.5s linear infinite;
+  }
+
+  .flower__grass--6 {
+    left: 25vmin;
+    bottom: 9vmin;
+    transform: scale(0.65) rotate(35deg) rotateY(-45deg);
+    opacity: 0.9;
+    z-index: 15;
+    animation: moving-grass--6 2.3s linear infinite;
+  }
+
+  .flower__grass--7 {
+    left: 35vmin;
+    bottom: 14vmin;
+    transform: scale(0.45) rotate(-70deg) rotateX(20deg) rotateY(170deg);
+    opacity: 0.75;
+    z-index: 8;
+    animation: moving-grass--7 1.9s linear infinite;
+  }
+
+  .flower__grass--8 {
+    left: 18vmin;
+    bottom: 5vmin;
+    transform: scale(0.55) rotate(50deg) rotateY(-70deg);
+    opacity: 0.8;
+    z-index: 10;
+    animation: moving-grass--8 2.1s linear infinite;
+  }
+
+  .flower__grass--9 {
+    left: -45vmin;
+    bottom: 20vmin;
+    transform: scale(0.3) rotate(20deg) rotateY(90deg);
+    opacity: 0.6;
+    z-index: 2;
+    animation: moving-grass--9 1.6s linear infinite;
+  }
+
+  .flower__grass--10 {
+    left: 42vmin;
+    bottom: 18vmin;
+    transform: scale(0.35) rotate(-45deg) rotateY(-120deg);
+    opacity: 0.65;
+    z-index: 3;
+    animation: moving-grass--10 2.0s linear infinite;
+  }
+
+  .flower__grass--top {
+    width: 7vmin;
+    height: 10vmin;
+    border-top-right-radius: 100%;
+    border-right: var(--line-w) solid var(--c);
+    transform-origin: bottom center;
+    transform: rotate(-2deg);
+  }
+
+  .flower__grass--bottom {
+    margin-top: -2px;
+    width: var(--line-w);
+    height: 25vmin;
+    background-image: linear-gradient(to top, transparent, var(--c));
+  }
+
+  .flower__grass__leaf {
+    --size: 10vmin;
+    position: absolute;
+    width: calc(var(--size) * 2.1);
+    height: var(--size);
+    border-top-left-radius: var(--size);
+    border-top-right-radius: var(--size);
+    background-image: linear-gradient(
+      to top,
+      transparent,
+      transparent 30%,
+      var(--c)
+    );
+    z-index: 100;
+  }
+
+  .flower__grass__leaf--1 {
+    top: -6%;
+    left: 30%;
+    --size: 6vmin;
+    transform: rotate(-20deg);
+    animation: growing-grass-ans--1 var(--speed-leaf) 2.6s backwards;
+  }
+
+  .flower__grass__leaf--2 {
+    top: -5%;
+    left: -110%;
+    --size: 6vmin;
+    transform: rotate(10deg);
+    animation: growing-grass-ans--2 var(--speed-leaf) 2.4s linear backwards;
+  }
+
+  .flower__grass__leaf--3 {
+    top: 5%;
+    left: 60%;
+    --size: 8vmin;
+    transform: rotate(-18deg) rotateX(-20deg);
+    animation: growing-grass-ans--3 var(--speed-leaf) 2.2s linear backwards;
+  }
+
+  .flower__grass__leaf--4 {
+    top: 6%;
+    left: -135%;
+    --size: 8vmin;
+    transform: rotate(2deg);
+    animation: growing-grass-ans--4 var(--speed-leaf) 2s linear backwards;
+  }
+
+  .flower__grass__leaf--5 {
+    top: 20%;
+    left: 60%;
+    --size: 10vmin;
+    transform: rotate(-24deg) rotateX(-20deg);
+    animation: growing-grass-ans--5 var(--speed-leaf) 1.8s linear backwards;
+  }
+
+  .flower__grass__leaf--6 {
+    top: 22%;
+    left: -180%;
+    --size: 10vmin;
+    transform: rotate(10deg);
+    animation: growing-grass-ans--6 var(--speed-leaf) 1.6s linear backwards;
+  }
+
+  .flower__grass__leaf--7 {
+    top: 39%;
+    left: 70%;
+    --size: 10vmin;
+    transform: rotate(-10deg);
+    animation: growing-grass-ans--7 var(--speed-leaf) 1.4s linear backwards;
+  }
+
+  .flower__grass__leaf--8 {
+    top: 40%;
+    left: -215%;
+    --size: 11vmin;
+    transform: rotate(10deg);
+    animation: growing-grass-ans--8 var(--speed-leaf) 1.2s linear backwards;
+  }
+
+  .flower__grass__overlay {
+    position: absolute;
+    top: -10%;
+    right: 0%;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 100;
+  }
+
+
+    @keyframes glowText {
+      0% {
+  text-shadow:
+    0 0 8px #fff,
+    0 0 16px #fff,
+    0 0 32px #00eaff,
+    0 0 48px #00eaff;
+      }
+      100% {
+  text-shadow:
+    0 0 16px #fff,
+    0 0 32px #fff,
+    0 0 64px #00eaff,
+    0 0 96px #00eaff;
+      }
+    }
+
+  /* KEYFRAMES */
+  @keyframes fadeIn {
+      to {
+          opacity: 1;
+      }
+  }
+
+  @keyframes tulip-light {
+    0% {
+      opacity: 0;
+      transform: translateY(0vmin) rotate(0deg);
+    }
+    20% {
+      opacity: 1;
+      transform: translateY(-3vmin) translateX(-1vmin) rotate(45deg);
+    }
+    40% {
+      opacity: 1;
+      transform: translateY(-8vmin) translateX(1vmin) rotate(90deg);
+    }
+    60% {
+      transform: translateY(-12vmin) translateX(-1vmin) rotate(135deg);
+    }
+    80% {
+      transform: translateY(-16vmin) translateX(2vmin) rotate(180deg);
+      opacity: 0.5;
+    }
+    100% {
+      transform: translateY(-25vmin) rotate(225deg);
+      opacity: 0;
+    }
+  }
+
+  @keyframes moving-flower-1 {
+    0%, 100% { transform: rotate(1.5deg) translateZ(0); }
+    50% { transform: rotate(-1.5deg) translateZ(0); }
+  }
+
+  @keyframes moving-flower-2 {
+    0%, 100% { transform: rotate(9.5deg) translateZ(0); }
+    50% { transform: rotate(6.5deg) translateZ(0); }
+  }
+
+  @keyframes moving-flower-3 {
+    0%, 100% { transform: rotate(-9.5deg) translateZ(0); }
+    50% { transform: rotate(-6.5deg) translateZ(0); }
+  }
+
+  @keyframes moving-flower-4 {
+    0%, 100% { transform: rotate(-13.5deg) translateZ(0); }
+    50% { transform: rotate(-10.5deg) scaleX(1.01) translateZ(0); }
+  }
+
+  @keyframes moving-flower-5 {
+    0%, 100% { transform: rotate(10.5deg) translateZ(0); }
+    50% { transform: rotate(13.5deg) scaleX(1.01) translateZ(0); }
+  }
+
+  @keyframes moving-flower-6 {
+    0%, 100% { transform: rotate(-19.5deg) translateZ(0); }
+    50% { transform: rotate(-16.5deg) translateZ(0); }
+  }
+
+  @keyframes moving-flower-7 {
+    0%, 100% { transform: rotate(16.5deg) translateZ(0); }
+    50% { transform: rotate(19.5deg) translateZ(0); }
+  }
+
+  @keyframes moving-flower-8 {
+    0%, 100% { transform: rotate(-35.5deg) translateZ(0); }
+    50% { transform: rotate(-32.5deg) translateZ(0); }
+  }
+
+  @keyframes moving-flower-9 {
+    0%, 100% { transform: rotate(32.5deg) translateZ(0); }
+    50% { transform: rotate(35.5deg) translateZ(0); }
+  }
+
+  @keyframes moving-flower-10 {
+    0%, 100% { transform: rotate(-25.5deg) translateZ(0); }
+    50% { transform: rotate(-22.5deg) translateZ(0); }
+  }
+
+  @keyframes moving-flower-11 {
+    0%, 100% { transform: rotate(22.5deg) translateZ(0); }
+    50% { transform: rotate(25.5deg) translateZ(0); }
+  }
+
+
+
+  @keyframes blooming-leaf-right {
+    0% {
+      transform-origin: left;
+      transform: rotate(70deg) scaleY(0) translateZ(0);
+    }
+    100% {
+      transform: rotate(70deg) scaleY(1) translateZ(0);
+    }
+  }
+
+  @keyframes blooming-leaf-left {
+    0% {
+      transform-origin: right;
+      transform: rotate(-70deg) scaleY(0) translateZ(0);
+    }
+    100% {
+      transform: rotate(-70deg) scaleY(1) translateZ(0);
+    }
+  }
+
+  @keyframes grow-flower-tree {
+    0% {
+      height: 0;
+      border-radius: 1vmin;
+    }
+  }
+
+  @keyframes blooming-flower {
+    0% {
+      transform: scale(0);
+    }
+  }
+
+  @keyframes moving-grass {
+    0%, 100% { transform: rotate(-48deg) rotateY(40deg); }
+    50% { transform: rotate(-50deg) rotateY(40deg); }
+  }
+
+  @keyframes moving-grass--2 {
+    0%, 100% { transform: scale(0.5) rotate(75deg) rotateX(10deg) rotateY(-200deg); }
+    50% { transform: scale(0.5) rotate(79deg) rotateX(10deg) rotateY(-200deg); }
+  }
+
+  @keyframes moving-grass--3 {
+    0%, 100% { transform: scale(0.7) rotate(-30deg) rotateY(45deg); }
+    50% { transform: scale(0.7) rotate(-33deg) rotateY(50deg); }
+  }
+
+  @keyframes moving-grass--4 {
+    0%, 100% { transform: scale(0.4) rotate(60deg) rotateX(15deg) rotateY(-180deg); }
+    50% { transform: scale(0.4) rotate(63deg) rotateX(18deg) rotateY(-175deg); }
+  }
+
+  @keyframes moving-grass--5 {
+    0%, 100% { transform: scale(0.6) rotate(-60deg) rotateY(60deg); }
+    50% { transform: scale(0.6) rotate(-57deg) rotateY(65deg); }
+  }
+
+  @keyframes moving-grass--6 {
+    0%, 100% { transform: scale(0.65) rotate(35deg) rotateY(-45deg); }
+    50% { transform: scale(0.65) rotate(38deg) rotateY(-40deg); }
+  }
+
+  @keyframes moving-grass--7 {
+    0%, 100% { transform: scale(0.45) rotate(-70deg) rotateX(20deg) rotateY(170deg); }
+    50% { transform: scale(0.45) rotate(-67deg) rotateX(23deg) rotateY(175deg); }
+  }
+
+  @keyframes moving-grass--8 {
+    0%, 100% { transform: scale(0.55) rotate(50deg) rotateY(-70deg); }
+    50% { transform: scale(0.55) rotate(53deg) rotateY(-65deg); }
+  }
+
+  @keyframes moving-grass--9 {
+    0%, 100% { transform: scale(0.3) rotate(20deg) rotateY(90deg); }
+    50% { transform: scale(0.3) rotate(23deg) rotateY(95deg); }
+  }
+
+  @keyframes moving-grass--10 {
+    0%, 100% { transform: scale(0.35) rotate(-45deg) rotateY(-120deg); }
+    50% { transform: scale(0.35) rotate(-42deg) rotateY(-115deg); }
+  }
+
+  .ramo {
+    position: absolute;
+    bottom: 2.5vmin;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1.2s cubic-bezier(.4,0,.2,1);
+    width: 68vmin;
+  }
+  .ramo--visible {
+    opacity: 1;
+  }
+  .ramo img {
+    width: 68vmin;
+    height: auto;
+    display: block;
+  }
+  
+  /* Nơ buộc bó hoa - z-index 100 cao hơn gốc hoa để che gốc hoa */
+  .flower-bow {
+    position: absolute;
+    bottom: 2.5vmin;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1.2s cubic-bezier(.4,0,.2,1);
+    width: 68vmin;
+  }
+  .flower-bow--visible {
+    opacity: 1;
+  }
+  .flower-bow img {
+    width: 68vmin;
+    height: auto;
+    display: block;
+  }
+  
+  /* CSS cho con thỏ */
+  .rabbit {
+    position: absolute;
+    width: clamp(96px, 14.5vmin, 125px);
+    height: auto;
+    z-index: 1005;
+    opacity: 0;
+    transition: opacity 1.2s cubic-bezier(.4,0,.2,1);
+    animation: rabbit-float 3s ease-in-out infinite;
+  }
+  
+  .rabbit--visible {
+    opacity: 1;
+  }
+  
+  .rabbit img {
+    width: 100%;
+    height: auto;
+    display: block;
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+  }
+  
+  /* Đặt con thỏ ở bên phải bó hoa & lật ngang hướng mặt vào giữa */
+  .rabbit--right {
+    right: clamp(-36px, -4vmin, -16px);
+    bottom: clamp(55px, 10.5vmin, 90px);
+  }
+
+  .rabbit--right img {
+    transform: scaleX(-1);
+  }
+  
+  /* Đặt con thỏ ở bên trái bó hoa */
+  .rabbit--left {
+    left: clamp(-36px, -4vmin, -16px);
+    bottom: clamp(55px, 10.5vmin, 90px);
+  }
+  
+  /* Animation nhẹ nhàng cho con thỏ */
+  @keyframes rabbit-float {
+    0%, 100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    25% {
+      transform: translateY(-8px) rotate(1deg);
+    }
+    50% {
+      transform: translateY(-5px) rotate(-1deg);
+    }
+    75% {
+      transform: translateY(-10px) rotate(0.5deg);
+    }
+  }
+  
+  /* Responsive cho mobile landscape (chiều cao hẹp) - thu nhỏ con thỏ + chữ hạt intro theo tỉ lệ màn hình */
+  @media (orientation: landscape) and (max-height: 550px), (max-width: 768px) and (orientation: landscape) {
+    .intro-curtain-overlay {
+      padding-bottom: 18px;
+    }
+    .intro {
+      padding-top: clamp(0.6rem, 2.8vh, 1.2rem);
+    }
+    .intro__text {
+      font-size: clamp(1.4rem, 8vh, 2.4rem);
+      line-height: 1.25;
+      padding: 0 8px;
+      width: 100%;
+      max-width: 90vw;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 14px rgba(244, 114, 182, 0.85));
+    }
+    .rabbit {
+      width: 75px;
+    }
+    
+    .rabbit--left {
+      left: -16px;
+      bottom: 16px;
+    }
+    
+    .rabbit--right {
+      right: -16px;
+      bottom: 16px;
+    }
+  }
+  
+  /* Responsive cho tablet landscape - thu nhỏ con thỏ & tinh chỉnh chữ intro */
+  @media (min-width: 769px) and (max-width: 1024px) and (orientation: landscape) and (min-height: 551px) {
+    .intro {
+      padding-top: clamp(0.8rem, 2.8vh, 1.6rem);
+    }
+    .intro__text {
+      font-size: clamp(1.8rem, 4.5vw, 3rem);
+      width: 100%;
+      max-width: 94vw;
+    }
+    .rabbit {
+      width: 90px;
+    }
+    
+    .rabbit--left {
+      left: -20px;
+      bottom: 20px;
+    }
+    
+    .rabbit--right {
+      right: -20px;
+      bottom: 20px;
+    }
+  }
+
+  /* Desktop (màn hình lớn >= 1025px) - câu chúc vừa vặn, thanh thoát và sáng rõ */
+  @media (min-width: 1025px) and (min-height: 551px) {
+    .intro-curtain-overlay {
+      padding-bottom: 56px;
+    }
+    .intro {
+      padding-top: clamp(2.2rem, 5vh, 3.6rem);
+      padding-left: 36px;
+      padding-right: 36px;
+    }
+    .intro__text {
+      font-size: clamp(2.6rem, 4.2vw, 4.2rem);
+      width: 100%;
+      max-width: 1150px;
+      letter-spacing: 0.02em;
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.75)) drop-shadow(0 0 18px rgba(244, 114, 182, 0.85)) drop-shadow(0 0 36px rgba(236, 72, 153, 0.6));
+    }
+  }
+  
+  .montes {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -11px;
+    width: 100%;
+    height: 58px;
+    pointer-events: none;
+    display: flex;
+    justify-content: space-between;
+    opacity: 0;
+    transition: opacity 1.2s cubic-bezier(.4,0,.2,1);
+    z-index: 1;
+  }
+  .ramo--visible .montes {
+    opacity: 1;
+  }
+  .monte {
+    display: block;
+    width: 82px;
+    height: 58px;
+    overflow: visible;
+    /* Tăng độ mờ sâu ở đáy: trong suốt hoàn toàn ở 12% đầu, mờ dần lên 70% mới đặc */
+    -webkit-mask-image: linear-gradient(to top, transparent 0%, transparent 12%, rgba(0, 0, 0, 0.25) 26%, rgba(0, 0, 0, 0.75) 48%, #000 72%);
+    mask-image: linear-gradient(to top, transparent 0%, transparent 12%, rgba(0, 0, 0, 0.25) 26%, rgba(0, 0, 0, 0.75) 48%, #000 72%);
+    filter: drop-shadow(0 0 6px rgba(76, 116, 41, 0.4)) drop-shadow(0 0 14px rgba(117, 146, 60, 0.2));
+    transition: filter 0.3s ease, opacity 0.3s ease;
+  }
+  .monte-izq {
+    margin-left: -14px;
+    transform-origin: bottom center;
+    animation: grass-sway-izq 5s ease-in-out infinite;
+  }
+  .monte-der {
+    margin-right: -14px;
+    transform-origin: bottom center;
+    animation: grass-sway-der 5.6s ease-in-out infinite;
+  }
+  
+  @keyframes grass-sway-izq {
+    0%, 100% { transform: rotate(0deg) skewX(0deg); }
+    50% { transform: rotate(-2.8deg) skewX(-1.5deg); }
+  }
+  @keyframes grass-sway-der {
+    0%, 100% { transform: rotate(0deg) skewX(0deg); }
+    50% { transform: rotate(2.8deg) skewX(1.5deg); }
+  }
+
+  .dew-sparkles circle {
+    animation: dew-twinkle 2.8s ease-in-out infinite alternate;
+  }
+  .dew-sparkles circle:nth-child(2) {
+    animation-delay: 0.7s;
+  }
+  .dew-sparkles circle:nth-child(3) {
+    animation-delay: 1.4s;
+  }
+  .dew-sparkles circle:nth-child(4) {
+    animation-delay: 2.1s;
+  }
+
+  @keyframes dew-twinkle {
+    0% { opacity: 0.3; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1.3); filter: drop-shadow(0 0 4px #fff); }
+  }
+  
+  /* CSS cho lá thư */
+  .letter {
+    position: fixed;
+    bottom: 24vmin;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 128px;
+    height: 75px;
+    z-index: 1000;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 1.2s cubic-bezier(.4,0,.2,1);
+    pointer-events: none;
+    filter: none;
+  }
+  
+  .letter--visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  .letter-envelope {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border-radius: 8px;
+    perspective: 1000px;
+    transform-style: preserve-3d;
+    transition: transform 0.25s ease, opacity 0.5s ease;
+  }
+
+  .letter:hover .letter-envelope {
+    transform: scale(1.06);
+  }
+
+  /* Thân phong bì có viền lượn nhẹ bằng filter (không dính vào nắp) */
+  .letter-envelope::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--letter-envelope-bg, linear-gradient(135deg, #fffdf5 0%, #fef3c7 50%, #fde68a 100%));
+    border-radius: 8px;
+    box-shadow: 
+      0 0 0 2px var(--letter-border-color, #f472b6),
+      0 4px 8px rgba(0, 0, 0, 0.25),
+      0 0 10px rgba(255, 215, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    filter: url(#wavyBorderEnvelope);
+    z-index: 0;
+    pointer-events: none;
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: transform;
+    isolation: isolate;
+    contain: paint;
+    transition: box-shadow 0.25s ease;
+  }
+
+  .letter:hover .letter-envelope::before {
+    box-shadow: 
+      0 0 0 2.5px var(--letter-border-color, #f472b6),
+      0 6px 14px rgba(0, 0, 0, 0.3),
+      0 0 16px var(--letter-border-glow, rgba(255, 107, 157, 0.5)),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+  
+  /* Nắp thư tam giác ngược SVG - viền sắc nét 100% (không dính filter sóng) */
+  .letter-flap-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+    overflow: visible;
+    border-radius: 8px 8px 0 0;
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.2));
+    transform-origin: top center;
+    transition: transform 0.4s ease-out;
+  }
+
+  .letter-flap-polyline {
+    fill: none;
+    stroke: var(--letter-border-color, #f472b6);
+    stroke-width: 2.5px;
+    vector-effect: non-scaling-stroke;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke-width 0.25s ease, stroke 0.3s ease;
+  }
+
+  .letter:hover .letter-flap-polyline {
+    stroke-width: 3px;
+  }
+
+  /* 1. Nắp thư bật mở dứt khoát, phong bì nhạt dần */
+  .letter.is-opening .letter-envelope {
+    opacity: 0;
+    transition: opacity 0.5s ease 0.25s;
+    overflow: visible;
+  }
+
+  .letter.is-opening .letter-flap-svg {
+    transform: rotateX(180deg);
+  }
+  
+  .letter-seal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 30px;
+    height: 30px;
+    background: radial-gradient(circle, var(--letter-seal-bg1, #ff6b9d) 0%, var(--letter-seal-bg2, #c2185b) 100%);
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 
+      0 0 15px var(--letter-seal-glow, rgba(255, 107, 157, 0.85)),
+      0 0 25px var(--letter-seal-glow, rgba(255, 107, 157, 0.65)),
+      0 0 35px var(--letter-seal-glow, rgba(255, 107, 157, 0.45)),
+      inset 0 0 6px rgba(255, 255, 255, 0.3);
+    z-index: 3;
+    will-change: transform, opacity;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.3s ease;
+  }
+
+  .letter:hover .letter-seal {
+    transform: translate(-50%, -50%) scale(1.12);
+    box-shadow: 
+      0 0 20px var(--letter-seal-glow, rgba(255, 107, 157, 1)),
+      0 0 35px var(--letter-seal-glow, rgba(255, 107, 157, 0.8)),
+      inset 0 0 6px rgba(255, 255, 255, 0.4);
+  }
+  
+  .letter-seal::after {
+    content: '❤️';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  /* 2. Trái tim bay lên chính giữa màn hình rồi BÙM! */
+  .letter.is-opening .letter-seal {
+    animation: heartFlyAndBoom 0.85s cubic-bezier(0.25, 0.1, 0.25, 1) 0.15s both;
+    pointer-events: none;
+    z-index: 1001;
+  }
+
+  @keyframes heartFlyAndBoom {
+    0% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+    /* Bay lên tới chính giữa màn hình theo chiều height */
+    65% {
+      transform: translate(-50%, calc(-50% + var(--heart-fly-y, -240px))) scale(1.5);
+      opacity: 1;
+    }
+    /* Khựng lại 1 nhịp ngắn tại tâm màn hình */
+    75% {
+      transform: translate(-50%, calc(-50% + var(--heart-fly-y, -240px))) scale(1.4);
+      opacity: 1;
+    }
+    /* BÙM! Nổ bung nhẹ nhàng ngay tại tâm màn hình */
+    88% {
+      transform: translate(-50%, calc(-50% + var(--heart-fly-y, -240px))) scale(2.8);
+      opacity: 0.85;
+    }
+    100% {
+      transform: translate(-50%, calc(-50% + var(--heart-fly-y, -240px))) scale(3.8);
+      opacity: 0;
+    }
+  }
+
+  /* 3. Modal lá thư: Bùum! Bật nảy xuất hiện ngay tại tâm */
+  .letter-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: flex-start; /* vị trí dọc do --lm-offset (JS) điều khiển để trượt mượt */
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.35s ease, visibility 0.35s ease;
+  }
+
+  .letter-modal.is-open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .letter-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(8, 12, 28, 0.18);
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
+  }
+
+  .letter-modal__box-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    flex-shrink: 0;
+    transform: scale(0.65);
+    translate: 0 var(--lm-offset, 0px);
+    transition: transform 0.45s cubic-bezier(0.34, 1.35, 0.64, 1), translate 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: translate, transform;
+  }
+  .letter-modal--snap .letter-modal__box-wrap {
+    transition: transform 0.45s cubic-bezier(0.34, 1.35, 0.64, 1) !important;
+  }
+
+  .letter-modal.is-open .letter-modal__box-wrap {
+    transform: scale(1);
+  }
+
+  /* Lớp nền + viền sóng — KHÔNG ảnh hưởng nội dung */
+  .letter-modal__box-wrap::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: var(--letter-modal-bg, linear-gradient(135deg, #fffdf5 0%, #fef9e7 50%, #fef0c7 100%));
+    box-shadow: 0 0 0 3px var(--letter-border-color, #f59e0b), 0 20px 50px rgba(0,0,0,0.45), 0 0 24px var(--letter-border-glow, rgba(245, 158, 11, 0.35));
+    filter: url(#wavyBorder);
+    z-index: 0;
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: transform;
+    isolation: isolate;
+    contain: paint;
+  }
+
+  .letter-modal__box {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-height: 85vh;
+    background: transparent;
+    border-radius: 12px;
+    padding: 32px 28px 28px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE & Edge */
+    isolation: isolate;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+
+  /* Ẩn hoàn toàn thanh cuộn, giữ trải nghiệm đọc thư mượt mà không vướng víu */
+  .letter-modal__box::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  /* Vệt mờ mềm mại ở đáy + Mũi tên nhấp nhô báo hiệu còn chữ bên dưới */
+  .letter-modal__scroll-hint {
+    position: absolute;
+    bottom: 0;
+    left: 8px;
+    right: 8px;
+    height: 58px;
+    background: linear-gradient(to bottom, rgba(255, 235, 210, 0) 0%, rgba(255, 235, 210, 0.88) 48%, rgba(255, 230, 204, 0.98) 100%);
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 8px;
+    z-index: 4;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .letter-modal__scroll-hint.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
+  .letter-modal__scroll-arrow {
+    color: var(--letter-modal-accent, #c2185b);
+    animation: letterScrollBounce 1.4s ease-in-out infinite;
+    filter: drop-shadow(0 1px 3px rgba(255, 255, 255, 0.9));
+    display: block;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  @keyframes letterScrollBounce {
+    0%, 100% {
+      transform: translateY(0);
+      opacity: 0.65;
+    }
+    50% {
+      transform: translateY(5px);
+      opacity: 1;
+    }
+  }
+
+  .letter-modal.is-releasing .letter-modal__scroll-hint,
+  .letter-modal.is-fading-out .letter-modal__scroll-hint {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.2s ease !important;
+  }
+
+  .letter-modal__close {
+    position: absolute;
+    top: -15px;
+    right: -18px;
+    width: 42px;
+    height: 42px;
+    border: 2.5px solid #ffffff;
+    border-radius: 50%;
+    background: var(--letter-modal-accent, rgba(194, 24, 91, 0.95));
+    color: #fff;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    filter: url(#wavyBorder);
+    z-index: 10;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), 0 0 12px var(--letter-border-glow, rgba(244, 114, 182, 0.5));
+  }
+
+  .letter-modal__close:hover {
+    background: var(--letter-modal-accent, #c2185b);
+    transform: scale(1.1);
+  }
+
+  .letter-modal__title {
+    font-family: 'Dancing Script', 'Comfortaa', cursive;
+    font-size: clamp(26px, 6vw, 34px);
+    font-weight: 700;
+    color: var(--letter-modal-title, #b45309);
+    margin: 0 0 16px 0;
+    padding: 0 20px;
+    line-height: 1.35;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.95);
+  }
+
+  .letter-modal__content {
+    font-family: 'Dancing Script', 'Pacifico', cursive;
+    font-size: clamp(21px, 4.4vw, 25px);
+    font-weight: 700;
+    line-height: 1.8;
+    color: var(--letter-modal-text, #78350f);
+    white-space: pre-wrap;
+    word-break: break-word;
+    letter-spacing: 0.015em;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85);
+  }
+
+  .letter-modal__content p {
+    margin: 0 0 16px 0;
+  }
+
+  .letter-modal__content p:last-child {
+    margin-bottom: 0;
+  }
+
+  .letter-modal__signature-wrap {
+    text-align: right;
+    margin-top: 22px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .letter-modal__signature {
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(24px, 5.2vw, 30px);
+    font-style: italic;
+    font-weight: 700;
+    color: var(--letter-modal-signature, #b45309);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
+  }
+
+  .letter-modal__footer {
+    margin-top: 24px;
+    text-align: center;
+  }
+
+  .letter-modal__btn-continue {
+    font-family: 'Comfortaa', 'Outfit', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #fff;
+    background: var(--letter-modal-btn-gradient, linear-gradient(135deg, #fbbf24 0%, #f59e0b 45%, #d97706 100%));
+    border: none;
+    border-radius: 999px;
+    padding: 13px 32px;
+    cursor: pointer;
+    box-shadow: var(--letter-modal-btn-shadow, 0 6px 20px rgba(217, 119, 6, 0.45));
+    transition: transform 0.2s, box-shadow 0.2s;
+    filter: url(#wavyBorderLight);
+  }
+  .letter-modal__btn-continue:hover {
+    transform: scale(1.05);
+    box-shadow: var(--letter-modal-btn-shadow-hover, 0 8px 24px rgba(217, 119, 6, 0.65));
+  }
+
+  /* Ẩn bó hoa + nội dung, chỉ còn nền */
+  body.content-hidden .flowers,
+  body.content-hidden .ramo,
+  body.content-hidden .flower-bow,
+  body.content-hidden .letter,
+  body.content-hidden .rabbit {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+  }
+
+  /* Thư mờ dần nhẹ nhàng, êm dịu, không bị đột ngột mà cũng không lưu vệt khung */
+  .letter-modal.is-fading-out {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: opacity 1.35s cubic-bezier(0.4, 0, 0.2, 1), visibility 1.35s ease-out !important;
+  }
+  .letter-modal.is-fading-out .letter-modal__box-wrap {
+    transform: scale(1) !important;
+    opacity: 0 !important;
+    transition: opacity 1.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  /* Giấy + viền + bóng tan êm ái cùng lúc — chỉ animate opacity (không scale hay đổi box-shadow → không vẽ lại filter sóng) */
+  .letter-modal.is-fading-out .letter-modal__box-wrap::before {
+    opacity: 0 !important;
+    transition: opacity 1.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  .letter-modal.is-fading-out .letter-modal__box {
+    opacity: 0 !important;
+    transition: opacity 1.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  /* Nền tối + blur tan êm: chỉ chuyển opacity, giữ nguyên blur để GPU chỉ hạ alpha cực nhẹ */
+  .letter-modal.is-fading-out .letter-modal__backdrop {
+    opacity: 0 !important;
+    transition: opacity 1.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  /* Tách layer sẵn ngay khi bấm Tiếp tục → lúc giấy mờ không phải raster lại */
+  .letter-modal.is-releasing .letter-modal__box-wrap {
+    will-change: transform, opacity;
+  }
+  .letter-modal.is-releasing .letter-modal__box-wrap::before,
+  .letter-modal.is-releasing .letter-modal__backdrop {
+    will-change: opacity;
+  }
+
+  /* Bấm Tiếp tục: chỉ ẩn nút + nút đóng trước, giấy và chữ giữ nguyên */
+  .letter-modal.is-releasing .letter-modal__footer,
+  .letter-modal.is-releasing .letter-modal__close {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.22s ease !important;
+  }
+  /* Bản chữ gốc ẩn đi — chữ đang hiển thị là bản tách rời nằm đúng vị trí */
+  .letter-modal.is-glyphs-out .letter-modal__title,
+  .letter-modal.is-glyphs-out .letter-modal__content {
+    visibility: hidden;
+  }
+
+  /* Nhóm ký tự rời khỏi giấy thư */
+  .letter-glyph-group {
+    position: fixed;
+    z-index: 1100;
+    pointer-events: none;
+    transform-origin: center center;
+    transition: color 0.8s ease;
+  }
+  /* Chỉ chữ bay mới tách layer GPU */
+  .letter-glyph-group.is-flying {
+    will-change: transform, opacity;
+  }
+  .letter-glyph-group > span {
+    position: absolute;
+    display: block;
+    white-space: pre;
+    text-align: center;
+  }
+  /* Chữ không bay: gom 1 lớp, mờ đi cùng giấy */
+  .letter-glyph-statics {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    pointer-events: none;
+    will-change: opacity;
+  }
+  .letter-glyph-statics.is-fading {
+    opacity: 0;
+    transition: opacity 1.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  /* Chữ chưa bay vẫn rõ khi giấy mờ đi */
+  .letter-glyph-group.is-awake {
+    color: #fdf2f8 !important;
+    text-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
+  }
+  /* Vừa rời trang: mang sắc ấm hồng + vàng thanh thoát, kèm bóng đổ mềm phía dưới → thấy rõ chữ nổi lên khỏi giấy */
+  .letter-glyph-group.is-warm {
+    color: #ffe4ee !important;
+    text-shadow: 0 0 6px rgba(253, 224, 171, 0.9), 0 0 12px rgba(244, 143, 177, 0.55), 0 8px 10px rgba(90, 20, 50, 0.35);
+  }
+  /* Bay xa lá thư: ánh sáng ngọc trắng xanh thanh nhẹ, không nặng GPU */
+  .letter-glyph-group.is-lit {
+    color: #f0f9ff !important;
+    text-shadow: 0 0 6px rgba(224, 242, 254, 0.95), 0 0 12px rgba(125, 211, 252, 0.65);
+  }
+
+  /* Hoa hấp thụ chữ: tăng sáng nhẹ nhàng bằng brightness, bỏ drop-shadow phức tạp để GPU mượt 60fps */
+  body.bouquet-absorbing .flowers,
+  body.bouquet-absorbing .ramo,
+  body.bouquet-absorbing .flower-bow {
+    filter: brightness(calc(1 + var(--absorb, 0) * 0.35));
+    transition: filter 0.4s ease;
+  }
+
+
+  /* Bó hoa tan dần thành bụi sáng — theo hướng từ dưới lên */
+  body.bouquet-dissolving .ramo,
+  body.bouquet-dissolving .flower-bow {
+    pointer-events: none !important;
+    filter: drop-shadow(0 0 14px rgba(125, 211, 252, 0.75));
+    transition: filter 0.8s ease;
+  }
+  /* Giấy gói + nơ: mặt nạ quét dần từ đáy lên, mép tan mềm mại bất quy tắc */
+  body.bouquet-dissolving .ramo > img,
+  body.bouquet-dissolving .flower-bow > img {
+    -webkit-mask-image: linear-gradient(to top,
+      transparent calc(var(--mz, 0) * 100% - 22%),
+      rgba(0,0,0,0.45) calc(var(--mz, 0) * 100% - 2%),
+      #000 calc(var(--mz, 0) * 100% + 18%));
+    mask-image: linear-gradient(to top,
+      transparent calc(var(--mz, 0) * 100% - 22%),
+      rgba(0,0,0,0.45) calc(var(--mz, 0) * 100% - 2%),
+      #000 calc(var(--mz, 0) * 100% + 18%));
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+  }
+  /* Thỏ, thư, thân hoa, bông hoa: mờ dần lần lượt theo độ cao (thấp trước, cao sau) */
+  body.bouquet-dissolving .dz-staggered {
+    opacity: 0 !important;
+    filter: blur(4px) brightness(1.5) saturate(0.6) drop-shadow(0 0 12px rgba(125, 211, 252, 0.85)) !important;
+    pointer-events: none !important;
+    transition: opacity 0.75s ease-in, filter 0.75s ease, translate 0.9s ease-in !important;
+    translate: 0 16px;
+    transition-delay: var(--dd, 0s) !important;
+  }
+
+  /* Canvas hạt trắng vàng */
+  .bouquet-dust-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 60;
+    pointer-events: none;
+  }
+
+  /* Container ảnh bay từ dưới lên */
+  .photo-float-container {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+  }
+  .photo-float-container.is-active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+  .photo-float {
+    position: absolute;
+    bottom: -20%;
+    width: min(calc((100vw - 32px) / 3), 280px);
+    border-radius: 14px;
+    animation: photoRise linear forwards;
+    pointer-events: auto;
+    touch-action: none;
+    cursor: grab;
+    isolation: isolate;
+    will-change: transform;
+  }
+  /* Lớp Glow Gradient trắng + xanh dương lung linh */
+  .photo-float::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(186, 230, 253, 0.85) 30%, rgba(56, 189, 248, 0.75) 65%, rgba(2, 132, 199, 0.6) 100%);
+    filter: blur(10px);
+    opacity: 0.85;
+    z-index: -1;
+    pointer-events: none;
+    transition: inset 0.25s, filter 0.25s, opacity 0.25s;
+  }
+  /* Viền sắc nét chuyển sắc (Gradient Border) từ trắng sang xanh dương */
+  .photo-float::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 7px;
+    padding: 1.5px;
+    background: linear-gradient(135deg, #ffffff 0%, #bae6fd 35%, #38bdf8 70%, #0284c7 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .photo-float:hover::before {
+    inset: -8px;
+    filter: blur(14px);
+    opacity: 1;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(224, 242, 254, 0.95) 30%, rgba(56, 189, 248, 0.85) 65%, rgba(2, 132, 199, 0.75) 100%);
+  }
+  .photo-float.is-dragging {
+    cursor: grabbing;
+    z-index: 100;
+    animation-play-state: paused !important;
+    opacity: 1 !important;
+    transform: scale(1.08);
+  }
+  .photo-float.is-dragging::before {
+    inset: -10px;
+    filter: blur(18px);
+    opacity: 1;
+    background: linear-gradient(135deg, #ffffff 0%, #e0f2fe 25%, #38bdf8 60%, #0284c7 100%);
+  }
+  .photo-float.is-dragging::after {
+    background: #ffffff;
+  }
+  .photo-float-center-wrap {
+    position: absolute;
+    left: 50%;
+    bottom: -20%;
+    width: clamp(95px, 20vw, 180px);
+    height: clamp(130px, 30vh, 240px);
+    animation: photoFloatUpCenter linear forwards;
+    border-radius: 7px;
+    isolation: isolate;
+  }
+  .photo-float-center-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(186, 230, 253, 0.85) 30%, rgba(56, 189, 248, 0.75) 65%, rgba(2, 132, 199, 0.6) 100%);
+    filter: blur(12px);
+    opacity: 0.85;
+    z-index: -1;
+    pointer-events: none;
+  }
+  .photo-float-center-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 7px;
+    padding: 1.5px;
+    background: linear-gradient(135deg, #ffffff 0%, #bae6fd 35%, #38bdf8 70%, #0284c7 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .photo-float-center-wrap .photo-float {
+    left: 0;
+    bottom: 0;
+    animation: none;
+    box-shadow: none;
+  }
+  .photo-float-center-wrap .photo-float::before,
+  .photo-float-center-wrap .photo-float::after {
+    display: none;
+  }
+  @keyframes photoFloatUpCenter {
+    0% {
+      transform: translate(-50%, 0) rotate(var(--float-rotate, 0deg));
+      opacity: 0.9;
+    }
+    100% {
+      transform: translate(-50%, -120vh) rotate(var(--float-rotate, 0deg));
+      opacity: 0;
+    }
+  }
+  .photo-float img {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    display: block;
+    border-radius: 8px;
+  }
+  /* Quãng bay (--rise) và góc nghiêng do JS tính theo làn → mọi ảnh cùng tốc độ, không đuổi kịp nhau */
+  @keyframes photoRise {
+    0% {
+      transform: translate3d(0, 0, 0) rotate(var(--float-rotate, 0deg));
+      opacity: 1;
+    }
+    86% {
+      opacity: 1;
+    }
+    100% {
+      transform: translate3d(0, var(--rise, -120vh), 0) rotate(var(--float-rotate, 0deg));
+      opacity: 0;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .letter-modal__close {
+      top: -13px;
+      right: -12px;
+      width: 38px;
+      height: 38px;
+      font-size: 23px;
+    }
+    .letter-modal__box {
+      padding: 24px 18px 20px;
+    }
+    .letter-modal__title {
+      font-size: 25px;
+      padding: 0 24px;
+    }
+    .letter-modal__content {
+      font-size: 19px;
+    }
+  }
+
+  /* Mobile portrait: ảnh bay tỉ lệ 3:4, bó hoa + hoa + lá thư lên cao hơn */
+  /* Mobile landscape: tăng max-height và width ảnh bay vì vh rất nhỏ */
+  @media (max-height: 500px) and (orientation: landscape) {
+    .photo-float {
+      width: clamp(90px, 22vw, 190px);
+      max-height: 55vh;
+    }
+    .photo-float img {
+      max-height: 55vh;
+    }
+  }
+
+  @media (max-width: 768px) and (orientation: portrait) {
+    .photo-float {
+      width: clamp(90px, 36vw, 200px);
+      max-height: 20vh;
+    }
+    .photo-float img {
+      max-height: 20vh;
+    }
+    /* Bố cục dọc tính theo CHIỀU CAO THẬT (--app-h):
+       Bó hoa cao ~100vmin (tỉ lệ theo chiều ngang) → phần dư (app-h - 140vmin) được dùng để nâng cụm hoa.
+       Màn thấp (11, SE, in-app có thanh công cụ) → nâng ít / hạ sát đáy; màn cao → nâng nhiều hơn, tối đa 28vmin.
+       Mọi máy cùng 1 công thức nên không còn cảnh máy này cao máy kia thấp. */
+    :root {
+      --lift: clamp(0px, calc((var(--app-h) - 145vmin) * 0.6), 24vmin);
+    }
+    .ramo {
+      width: 85vmin;
+      transform: translateX(-50%) translateY(calc(-1 * var(--lift)));
+    }
+    .ramo > img {
+      width: 85vmin;
+    }
+    .flower-bow {
+      width: 85vmin;
+      transform: translateX(-50%) translateY(calc(-1 * var(--lift)));
+    }
+    .flower-bow > img {
+      width: 85vmin;
+    }
+    /* translate nằm sau scale(0.95) → chia 0.95 để hoa đi lên đúng bằng bó hoa */
+    .flowers {
+      transform: scale(0.95) translateY(calc(-4.5vmin - var(--lift) / 0.95));
+    }
+    .letter {
+      transform: translateX(-50%) translateY(calc(-1 * var(--lift)));
+    }
+    /* Nút vân tay: cách đáy ~13% chiều cao thật (≈ 70px máy thấp → ≈ 100px máy cao) */
+    .intro-curtain-overlay {
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + clamp(64px, calc(var(--app-h) * 0.13), 104px));
+    }
+    /* Câu chúc: cách đỉnh ~7% chiều cao thật */
+    .intro {
+      padding-top: calc(env(safe-area-inset-top, 0px) + clamp(1.1rem, calc(var(--app-h) * 0.048), 3rem));
+    }
+    .intro__text {
+      /* Theo chiều ngang, nhưng màn thấp thì co theo chiều cao để không đè xuống bó hoa */
+      font-size: clamp(1.75rem, min(8.8vw, calc(var(--app-h) * 0.062)), 3.2rem);
+      line-height: 1.25;
+      width: 100%;
+      max-width: 94vw;
+      padding: 0 6px;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 14px rgba(244, 114, 182, 0.85));
+    }
+  }
+
+  /* Tablet dọc (iPad): bố cục thoáng đãng, câu chúc nhích lên trên và hạ bó hoa xuống hợp lý để không bị sát nhau */
+  @media (min-width: 600px) and (orientation: portrait) {
+    .intro {
+      padding-top: calc(env(safe-area-inset-top, 0px) + clamp(2rem, 5vh, 3.6rem));
+    }
+    .intro__text {
+      font-size: clamp(2.3rem, 5.8vw, 3.6rem);
+    }
+    .ramo,
+    .flower-bow {
+      width: 68vmin;
+      transform: translateX(-50%) translateY(-3.5vh);
+    }
+    .ramo > img,
+    .flower-bow > img {
+      width: 68vmin;
+    }
+    /* translate nằm sau scale(0.7) → chia 0.7 để hoa đi lên đúng bằng bó hoa */
+    .flowers {
+      transform: scale(0.7) translateY(calc(-4.5vmin - 5vh));
+    }
+    .letter {
+      width: clamp(150px, 23vmin, 210px);
+      height: auto;
+      aspect-ratio: 128 / 75;
+      bottom: 21.6vmin;
+      transform: translateX(-50%) translateY(-3.5vh);
+    }
+    .letter-seal {
+      width: 38px;
+      height: 38px;
+    }
+    .letter-seal::after {
+      font-size: 19px;
+    }
+  }
+
+  /* Tablet ngang (iPad landscape): khoảng cách thông thoáng giữa câu chúc và bó hoa */
+  @media (min-width: 768px) and (max-width: 1180px) and (orientation: landscape) {
+    .intro {
+      padding-top: clamp(1.4rem, 3.6vh, 2.5rem);
+    }
+    .intro__text {
+      font-size: clamp(2.2rem, 4.8vw, 3.4rem);
+    }
+    .ramo,
+    .flower-bow,
+    .letter {
+      transform: translateX(-50%) translateY(4.5vmin);
+    }
+    .flowers {
+      transform: scale(0.68) translateY(calc(-4.5vmin + 4.5vmin / 0.68));
+    }
+  }
+
+  /* Màn ngang (desktop + mobile landscape): hạ cả cụm bó hoa xuống một chút để thoáng với câu chúc.
+     Đuôi giấy gói/nơ có thể chìm nhẹ dưới mép màn hình — phần trên bó hoa giữ nguyên tỉ lệ */
+  @media (orientation: landscape) {
+    .ramo,
+    .flower-bow,
+    .letter {
+      transform: translateX(-50%) translateY(2.5vmin);
+    }
+    /* translate nằm sau scale(0.7) → chia 0.7 để hoa đi xuống đúng bằng bó hoa */
+    .flowers {
+      transform: scale(0.7) translateY(calc(-4.5vmin + 2.5vmin / 0.7));
+    }
+  }
+  /* Mobile ngang: phong bì thu nhỏ một chút, neo theo đáy để vẫn nằm đúng chỗ trên bó hoa */
+  @media (orientation: landscape) and (max-height: 550px) {
+    .letter {
+      transform-origin: center bottom;
+      transform: translateX(-50%) translateY(2.5vmin) scale(0.86);
+    }
+  }
+  /* Desktop: câu chúc nhích lên thêm chút */
+  @media (min-width: 1025px) and (min-height: 551px) {
+    .intro {
+      padding-top: clamp(1.4rem, 3.5vh, 2.6rem);
+    }
+  }

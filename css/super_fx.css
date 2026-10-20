@@ -1,0 +1,912 @@
+/* ===================================================================
+   SUPER FX - HIỆU ỨNG THẾ HỆ MỚI CHO BÓ HOA TULIP & THƯ 9X
+   Hiệu ứng mượt mà 60fps, tương tác 3D, Polaroid xịn sò, Vệt sao ma thuật
+   =================================================================== */
+
+/* --- 1. KHUNG ẢNH POLAROID BAY SIÊU XỊN (ĐÃ FIX GIẬT CHỚP) --- */
+/* Tắt triệt để viền xanh dương cũ gây chói và giật lag */
+.photo-float::before,
+.photo-float::after {
+  display: none !important;
+}
+
+.photo-float {
+  /* Khung thẻ ảnh polaroid cao cấp chuẩn tỉ lệ 100% không tràn viền */
+  background: #ffffff !important;
+  padding: 10px 10px 42px 10px !important;
+  border-radius: 14px !important;
+  box-sizing: border-box !important;
+  max-height: none !important;
+  height: auto !important;
+  box-shadow: 
+    0 14px 38px rgba(0, 0, 0, 0.42),
+    0 0 22px rgba(255, 182, 193, 0.45) !important;
+  cursor: pointer !important;
+  /* CHÚ Ý: KHÔNG gán transition transform ở đây để keyframe bay photoRise mượt tuyệt đối */
+  transition: box-shadow 0.25s ease !important;
+  overflow: visible !important;
+}
+
+/* Hover: CHỈ tăng sáng và đổ bóng hào quang, TUYỆT ĐỐI KHÔNG can thiệp transform của photo-float */
+.photo-float:hover {
+  box-shadow: 
+    0 22px 55px rgba(0, 0, 0, 0.6),
+    0 0 35px rgba(244, 114, 182, 0.8),
+    0 0 12px rgba(255, 255, 255, 0.9) !important;
+  z-index: 9999 !important;
+}
+
+.photo-float img {
+  border-radius: 8px !important;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  aspect-ratio: 9 / 16 !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+  box-sizing: border-box !important;
+  background: #fdf2f8 !important;
+  transition: filter 0.25s ease !important;
+}
+
+/* Khi rê chuột: Tăng độ sáng và tương phản ngọt ngào, TUYỆT ĐỐI KHÔNG scale để tránh ảnh tràn viền */
+.photo-float:hover img {
+  filter: brightness(1.08) contrast(1.02) !important;
+}
+
+/* Banner chỉ dẫn chạm ảnh kỷ niệm siêu cute & nổi bật */
+.photo-guide-banner {
+  position: fixed;
+  top: clamp(62px, 11vh, 85px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1.8px solid #f472b6;
+  border-radius: 999px;
+  padding: 9px 20px;
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.35),
+    0 0 25px rgba(244, 114, 182, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
+}
+
+.photo-guide-banner.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+  animation: photoGuideFloat 2.2s ease-in-out infinite alternate;
+}
+
+@keyframes photoGuideFloat {
+  0% { transform: translateX(-50%) translateY(0); }
+  100% { transform: translateX(-50%) translateY(-5px); }
+}
+
+.photo-guide-banner .guide-icon {
+  font-size: 18px;
+  animation: guideIconPulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes guideIconPulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.25); }
+}
+
+.photo-guide-banner .guide-title,
+.photo-guide-banner .guide-text {
+  font-family: 'Comfortaa', 'Outfit', sans-serif;
+  font-size: clamp(12.5px, 3.2vw, 14.5px);
+  font-weight: 700;
+  color: #9d174d;
+  letter-spacing: 0.02em;
+}
+
+.photo-guide-banner .guide-badge,
+.photo-guide-banner .guide-tap-badge {
+  background: linear-gradient(135deg, #ec4899, #db2777);
+  color: #ffffff;
+  font-family: 'Comfortaa', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(219, 39, 119, 0.4);
+}
+
+/* Miếng băng dính washi pastel dễ thương dán ở đầu ảnh */
+.photo-float-washi {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 52px;
+  height: 19px;
+  background: linear-gradient(135deg, rgba(255, 230, 240, 0.92), rgba(255, 192, 203, 0.88));
+  backdrop-filter: blur(2px);
+  border-left: 2px dashed rgba(255, 120, 170, 0.7);
+  border-right: 2px dashed rgba(255, 120, 170, 0.7);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* Con tem trái tim ở góc trên ảnh */
+.photo-float-stamp {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 15px;
+  pointer-events: none;
+  z-index: 10;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Huy hiệu nhắc chạm "Chạm xem nè 💖" đặt góc dưới trong bức ảnh */
+.photo-tap-pill {
+  position: absolute;
+  bottom: 50px;
+  right: 14px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1.4px solid #f472b6;
+  border-radius: 999px;
+  padding: 2.5px 8px;
+  font-family: 'Comfortaa', sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #be185d;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 12;
+  animation: badgeBreathe 1.8s ease-in-out infinite alternate;
+}
+
+/* Nhãn sticker tình cảm nằm ngay ngắn giữa dải viền trắng dưới đáy ảnh */
+.photo-float-label {
+  position: absolute;
+  bottom: 11px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-family: 'Comfortaa', cursive, sans-serif;
+  font-size: clamp(11.5px, 2.8vw, 13.5px);
+  font-weight: 700;
+  color: #be185d;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 10px;
+  box-sizing: border-box;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
+  z-index: 10;
+}
+
+/* Vệt sáng quét lấp lánh (Shimmer) */
+.photo-float-shimmer {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 8;
+}
+.photo-float-shimmer::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 40%;
+  height: 200%;
+  background: linear-gradient(
+    60deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 100%
+  );
+  transform: rotate(25deg);
+  animation: photoShimmer 4s ease-in-out infinite;
+}
+@keyframes photoShimmer {
+  0%, 65% { left: -70%; }
+  100% { left: 160%; }
+}
+
+/* --- 2. MODAL PHÓNG TO ẢNH 3D TILT & THẺ KỶ NIỆM (LIGHTBOX) --- */
+.fx-photo-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: rgba(10, 15, 32, 0.86);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.fx-photo-modal.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Ẩn guide banner khi lightbox đang mở */
+.fx-photo-modal.is-open ~ .photo-guide-banner,
+body:has(.fx-photo-modal.is-open) .photo-guide-banner {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.fx-photo-card-wrap {
+  position: relative;
+  perspective: 1200px;
+  max-width: min(420px, 92vw);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform: scale(0.85) translateY(20px);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.fx-photo-modal.is-open .fx-photo-card-wrap {
+  transform: scale(1) translateY(0);
+}
+
+.fx-photo-card {
+  background: #ffffff;
+  padding: 12px 12px 16px 12px;
+  border-radius: 20px;
+  box-shadow: 
+    0 25px 70px rgba(0, 0, 0, 0.7),
+    0 0 50px rgba(244, 114, 182, 0.45);
+  transform-style: preserve-3d;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  width: auto;
+  min-width: min(280px, 86vw);
+  max-width: min(390px, 90vw);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.fx-photo-card.is-flipping {
+  animation: photoCardFlip 0.45s ease-in-out;
+}
+
+@keyframes photoCardFlip {
+  0% { transform: rotateY(0deg) scale(1); }
+  50% { transform: rotateY(90deg) scale(0.88); }
+  100% { transform: rotateY(0deg) scale(1); }
+}
+
+.fx-photo-card img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: clamp(240px, 50vh, 460px);
+  object-fit: contain !important;
+  object-position: center center !important;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  margin: 0 auto;
+}
+
+.fx-photo-card-info {
+  margin-top: 12px;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.fx-photo-card-title {
+  font-family: 'Comfortaa', cursive, sans-serif;
+  font-size: clamp(16px, 4.2vw, 19px);
+  font-weight: 700;
+  color: #be185d;
+  margin-bottom: 6px;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* Lời nhắn gửi riêng cho Thư 9x dưới từng bức ảnh */
+.fx-photo-story-note {
+  background: linear-gradient(135deg, #fff0f5 0%, #fff7ed 100%);
+  border: 1.4px solid #fbcfe8;
+  border-radius: 12px;
+  padding: 9px 12px;
+  font-family: 'Comfortaa', system-ui, sans-serif;
+  font-size: clamp(12.5px, 3.4vw, 13.8px);
+  font-weight: 600;
+  line-height: 1.55;
+  color: #374151;
+  text-align: center;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.fx-photo-card-close {
+  position: absolute;
+  top: -16px;
+  right: -16px;
+  width: 38px;
+  height: 38px;
+  background: #ffffff;
+  color: #db2777;
+  border: 2px solid #fbcfe8;
+  border-radius: 50%;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, background 0.2s;
+  z-index: 20;
+}
+.fx-photo-card-close:hover {
+  transform: scale(1.15) rotate(90deg);
+  background: #fdf2f8;
+}
+
+/* Nút bấm chuyển ảnh & đóng bên dưới thẻ ảnh (Gọn gàng, 2 nút tinh tế) */
+.fx-photo-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.fx-btn-action {
+  background: rgba(255, 255, 255, 0.22);
+  border: 1.4px solid rgba(255, 255, 255, 0.55);
+  color: #ffffff;
+  padding: 10px 22px;
+  border-radius: 999px;
+  font-family: 'Comfortaa', sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background 0.2s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.28);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.fx-btn-action:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 8px 25px rgba(244, 114, 182, 0.6);
+}
+
+.fx-btn-action:active {
+  transform: scale(0.96);
+}
+
+.fx-btn-action.fx-btn-next {
+  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+  border-color: #f472b6;
+  box-shadow: 0 4px 18px rgba(219, 39, 119, 0.5);
+}
+
+.fx-btn-action.fx-btn-next:hover {
+  background: linear-gradient(135deg, #f472b6 0%, #e11d48 100%);
+  box-shadow: 0 6px 24px rgba(219, 39, 119, 0.7);
+}
+
+/* --- 3. VỆT BỤI SAO MA THUẬT THEO CHUỘT / TAY CHẠM (CANVAS) --- */
+#fxSparkleCanvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 999990;
+}
+
+/* --- 4. CANVAS MƯA CÁNH HOA TULIP & ĐOM ĐÓM 3D --- */
+#fxPetalCanvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 2; /* Trên bầu trời đêm, dưới bó hoa và thư */
+}
+
+/* --- 5. NÚT ĐIỀU KHIỂN NỔI GÓC MÀN HÌNH (FLOATING CONTROLS) --- */
+.fx-top-bar {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  right: calc(env(safe-area-inset-right, 0px) + 12px);
+  z-index: 99990;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 24px);
+}
+
+@media (max-width: 480px) {
+  .fx-top-bar {
+    top: calc(env(safe-area-inset-top, 0px) + 8px);
+    right: calc(env(safe-area-inset-right, 0px) + 8px);
+    gap: 6px;
+  }
+  .fx-pill-btn {
+    padding: 5.5px 10px;
+    font-size: 11.5px;
+    gap: 4px;
+  }
+}
+
+.fx-pill-btn {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  user-select: none;
+}
+.fx-pill-btn:hover {
+  background: rgba(244, 114, 182, 0.4);
+  border-color: rgba(244, 114, 182, 0.8);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(244, 114, 182, 0.35);
+}
+
+/* Icon xoay theo đĩa nhạc */
+.fx-music-disc {
+  display: inline-block;
+  animation: discSpin 4s linear infinite;
+}
+.fx-music-disc.is-paused {
+  animation-play-state: paused;
+  opacity: 0.6;
+}
+@keyframes discSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* --- 6. PHÁO HOA TRÁI TIM BÙNG NỔ (BURST HEARTS) --- */
+.fx-flying-heart {
+  position: fixed;
+  pointer-events: none;
+  z-index: 999995;
+  user-select: none;
+  will-change: transform, opacity;
+  contain: layout style paint;
+  animation: flyingHeartAnim 2.2s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes flyingHeartAnim {
+  0% {
+    transform: translate(0, 0) scale(0.4) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate(var(--tx, 0px), var(--ty, -120px)) scale(1.3) rotate(var(--tr, 20deg));
+    opacity: 0;
+  }
+}
+
+/* --- 7. BANNER MỜI MỞ BỨC THƯ SANG TRỌNG, RÕ NÉT 100% (LETTER OPEN PROMPT) --- */
+.letter-open-prompt {
+  position: fixed;
+  bottom: clamp(68px, 11.5vmin, 88px);
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1.8px solid var(--letter-border-color, #f59e0b);
+  border-radius: 999px;
+  padding: 10px 24px;
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.35),
+    0 0 25px var(--letter-border-glow, rgba(245, 158, 11, 0.55)),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
+  white-space: nowrap;
+}
+
+.letter-open-prompt.is-visible.is-ready {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+  animation: promptFloatPulse 2.2s ease-in-out infinite alternate;
+}
+
+.letter-open-prompt:hover {
+  transform: translateX(-50%) scale(1.06);
+  background: #ffffff;
+  border-color: var(--letter-modal-accent, #d97706);
+  box-shadow: 
+    0 14px 38px rgba(0, 0, 0, 0.45),
+    0 0 32px var(--letter-border-glow, rgba(245, 158, 11, 0.75));
+}
+
+.letter-open-prompt .prompt-icon,
+.letter-open-prompt .prompt-sparkle {
+  font-size: 19px;
+  line-height: 1;
+  display: inline-block;
+  animation: promptIconPulse 1.4s ease-in-out infinite alternate;
+}
+
+.letter-open-prompt .prompt-sparkle {
+  animation-delay: 0.7s;
+}
+
+.letter-open-prompt .prompt-text {
+  font-family: 'Outfit', 'Comfortaa', system-ui, -apple-system, sans-serif;
+  font-size: clamp(14px, 3.8vw, 15.5px);
+  font-weight: 700;
+  color: var(--letter-modal-title, #b45309);
+  letter-spacing: 0.02em;
+}
+
+@keyframes promptFloatPulse {
+  0% {
+    transform: translateX(-50%) translateY(0);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 0 20px var(--letter-border-glow, rgba(245, 158, 11, 0.5));
+  }
+  100% {
+    transform: translateX(-50%) translateY(-6px);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.4), 0 0 30px var(--letter-border-glow, rgba(245, 158, 11, 0.75));
+  }
+}
+
+@keyframes promptIconPulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.22); }
+}
+
+/* Vòng sóng radar tỏa hào quang quanh phong bì thư */
+.letter-radar-wave {
+  position: absolute;
+  inset: -12px;
+  border-radius: 14px;
+  border: 2px solid var(--letter-border-color, rgba(245, 158, 11, 0.8));
+  box-shadow: 0 0 18px var(--letter-border-glow, rgba(245, 158, 11, 0.6));
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0;
+}
+
+.letter--visible .letter-radar-wave {
+  animation: letterRadar 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+
+@keyframes letterRadar {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.9;
+  }
+  60% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+/* Nhịp tim cho con dấu trái tim trên phong bì */
+.letter-seal {
+  animation: sealHeartbeat 1.6s ease-in-out infinite !important;
+}
+
+@keyframes sealHeartbeat {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  25% { transform: translate(-50%, -50%) scale(1.18); }
+  35% { transform: translate(-50%, -50%) scale(1.06); }
+  45% { transform: translate(-50%, -50%) scale(1.22); }
+  60% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Nghiêm ngặt ẩn chỉ dẫn mở thư khi chưa sẵn sàng, intro đang chạy hoặc thư đã mở */
+body.not-loaded .letter-open-prompt,
+body:has(#intro:not(.is-done)) .letter-open-prompt,
+#intro:not(.is-done) ~ .letter-open-prompt,
+.letter-open-prompt:not(.is-ready),
+.letter-modal.is-open ~ .letter-open-prompt,
+body:has(.letter-modal.is-open) .letter-open-prompt,
+.letter.is-opened ~ .letter-open-prompt,
+.letter-open-prompt.is-hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  transform: translateX(-50%) translateY(20px) !important;
+}
+
+/* --- 8. VẦNG HÀO QUANG TRĂNG HOÀNG CUNG MỜ ẢO (DREAMY MOON GLOW) --- */
+.bouquet-dreamy-glow {
+  position: fixed;
+  bottom: 12vmin;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 78vmin;
+  height: 90vmin;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 220, 235, 0.38) 0%,
+    rgba(254, 240, 138, 0.20) 42%,
+    rgba(244, 114, 182, 0.08) 65%,
+    transparent 80%
+  );
+  filter: blur(36px);
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform, opacity;
+  animation: moonGlowBreath 6s ease-in-out infinite alternate;
+}
+
+.ramo--visible ~ .bouquet-dreamy-glow,
+.ramo.ramo--visible + .bouquet-dreamy-glow,
+body:not(.not-loaded) .bouquet-dreamy-glow {
+  opacity: 1;
+}
+
+@keyframes moonGlowBreath {
+  0% { transform: translateX(-50%) scale(0.96); opacity: 0.82; }
+  100% { transform: translateX(-50%) scale(1.05); opacity: 1; }
+}
+
+/* --- 9. DÂY ĐÈN ĐOM ĐÓM FAIRY LIGHTS QUẤN QUANH BÓ HOA --- */
+.fairy-lights-system {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 1.5s ease;
+}
+
+.ramo--visible .fairy-lights-system {
+  opacity: 1;
+}
+
+.fairy-bulb {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fffbeb;
+  box-shadow: 
+    0 0 6px #fde047,
+    0 0 14px #f59e0b,
+    0 0 24px rgba(245, 158, 11, 0.85);
+  will-change: transform, opacity;
+  animation: bulbTwinkle 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes bulbTwinkle {
+  0% {
+    transform: scale(0.75);
+    opacity: 0.45;
+  }
+  100% {
+    transform: scale(1.25);
+    opacity: 1;
+  }
+}
+
+/* --- 10. TƯƠNG TÁC DỄ THƯƠNG & BONG BÓNG THOẠI 2 BÉ THỎ --- */
+.rabbit {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s ease;
+}
+
+.rabbit:hover {
+  transform: scale(1.12) !important;
+  filter: drop-shadow(0 0 16px rgba(255, 182, 193, 0.95)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
+}
+
+.rabbit.is-jumping {
+  animation: rabbitJump 0.65s cubic-bezier(0.2, 0.85, 0.3, 1.2) !important;
+}
+
+@keyframes rabbitJump {
+  0%, 100% { transform: translateY(0) scale(1); }
+  35% { transform: translateY(-30px) scale(1.22) rotate(4deg); }
+  65% { transform: translateY(-10px) scale(1.08) rotate(-2deg); }
+}
+
+/* Badge chỉ dẫn "Chạm tui nè 🐾" lắc lư trên tai thỏ */
+.rabbit-badge {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.96);
+  border: 1.6px solid var(--letter-border-color, #f59e0b);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-family: 'Comfortaa', 'Outfit', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--letter-modal-accent, #b45309);
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), 0 0 10px var(--letter-border-glow, rgba(245, 158, 11, 0.5));
+  pointer-events: none;
+  z-index: 10;
+  animation: badgeBreathe 1.8s ease-in-out infinite alternate;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+@keyframes badgeBreathe {
+  0% { transform: translateX(-50%) translateY(0) scale(0.96); }
+  100% { transform: translateX(-50%) translateY(-5px) scale(1.04); }
+}
+
+/* Khi bong bóng thoại hiện ra thì ẩn nhẹ badge để không bị đè */
+.rabbit.has-bubble-open .rabbit-badge {
+  opacity: 0;
+  transform: translateX(-50%) scale(0.7);
+}
+
+/* Bong bóng thoại cao cấp, siêu nét và cute */
+.rabbit-bubble {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  width: max-content;
+  max-width: clamp(140px, 35vw, 175px);
+  background: rgba(255, 255, 255, 0.97);
+  border: 1.8px solid var(--letter-border-color, #f59e0b);
+  border-radius: 16px;
+  padding: 8px 12px;
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.3),
+    0 0 16px var(--letter-border-glow, rgba(245, 158, 11, 0.45));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) scale(0.7) translateY(8px);
+  transform-origin: bottom center;
+  transition: opacity 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 1060;
+}
+
+.rabbit-bubble--left {
+  left: 50%;
+  transform-origin: bottom center;
+}
+
+.rabbit-bubble--right {
+  left: 50%;
+  transform-origin: bottom center;
+}
+
+/* Đuôi nhọn của bóng thoại chỉ ngay vào giữa đầu bé thỏ */
+.rabbit-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 8px 7px 0;
+  border-style: solid;
+  border-color: var(--letter-border-color, #f59e0b) transparent transparent;
+  display: block;
+  width: 0;
+}
+
+.rabbit-bubble--left::after,
+.rabbit-bubble--right::after {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+}
+
+.rabbit-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -5.5px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6.5px 5.5px 0;
+  border-style: solid;
+  border-color: #ffffff transparent transparent;
+  display: block;
+  width: 0;
+  z-index: 1;
+}
+
+.rabbit-bubble--left::before,
+.rabbit-bubble--right::before {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+}
+
+.rabbit-bubble.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) scale(1) translateY(0);
+  animation: bubbleGentleFloat 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes bubbleGentleFloat {
+  0% { transform: translateX(-50%) translateY(0); }
+  100% { transform: translateX(-50%) translateY(-5px); }
+}
+
+.rabbit-bubble .bubble-text {
+  display: block;
+  font-family: 'Comfortaa', 'Outfit', system-ui, sans-serif;
+  font-size: clamp(11.5px, 3.1vw, 13px);
+  font-weight: 700;
+  line-height: 1.42;
+  color: var(--letter-modal-text, #78350f);
+  text-align: center;
+  word-break: break-word;
+}
+
+/* Ẩn bong bóng thoại khi mở modal xem thư HOẶC khi trang chưa tải / intro đang chạy */
+body.not-loaded .rabbit-bubble,
+body:has(#intro:not(.is-done)) .rabbit-bubble,
+#intro:not(.is-done) ~ * .rabbit-bubble,
+.letter-modal.is-open ~ .ramo .rabbit-bubble,
+body:has(.letter-modal.is-open) .rabbit-bubble {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateX(-50%) scale(0.7) translateY(10px) !important;
+}
+
